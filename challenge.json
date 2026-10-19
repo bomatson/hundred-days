@@ -3,7 +3,21 @@
   "start_date": "2026-10-20",
   "days": 100,
   "participants": [
-    { "id": "bobby", "name": "Bobby", "makes": "a melodic hook" },
-    { "id": "jason", "name": "Jason", "makes": "a bass line" }
-  ]
+    {
+      "id": "bobby",
+      "name": "Bobby",
+      "makes": "a melodic hook"
+    },
+    {
+      "id": "jason",
+      "name": "Jason",
+      "makes": "a bass line"
+    },
+    {
+      "id": "drew",
+      "name": "Drew",
+      "makes": "a vocal take"
+    }
+  ],
+  "upload_endpoint": ""
 }
