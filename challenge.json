@@ -19,5 +19,5 @@
       "makes": "a vocal take"
     }
   ],
-  "upload_endpoint": ""
+  "upload_endpoint": "https://hundred-days-upload.bobby-matson.workers.dev"
 }
