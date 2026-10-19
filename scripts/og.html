@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; background: #fff; color: #000; font-family: "Bricolage Grotesque", Helvetica, Arial, sans-serif; overflow: hidden; }
+  .wrap { padding: 64px 72px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; justify-content: space-between; }
+  h1 { margin: 0; font-size: 132px; line-height: 0.9; letter-spacing: -0.05em; font-weight: 800; font-variation-settings: "opsz" 96; }
+  p { margin: 18px 0 0; font-size: 34px; font-weight: 500; color: #5f6368; letter-spacing: -0.01em; max-width: 24ch; line-height: 1.15; }
+  .lane { display: grid; grid-template-columns: 150px 1fr; gap: 24px; align-items: center; padding: 16px 0; border-top: 2px solid #e4e6ea; }
+  .lane:last-child { border-bottom: 2px solid #e4e6ea; }
+  .name { font-size: 26px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+  .name::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
+  .steps { display: grid; grid-template-columns: repeat(100, 1fr); gap: 3px; }
+  .s { height: 40px; border-radius: 3px; background: #eceef2; }
+  .s.on { background: var(--c); }
+</style></head>
+<body><div class="wrap">
+  <div><h1>Hundred<br>Days</h1><p>One hook and one bass line, every day, for 100 days.</p></div>
+  <div>
+    <div class="lane" style="--c:#ff4d1c"><div class="name">Bobby</div><div class="steps" id="a"></div></div>
+    <div class="lane" style="--c:#1f4fff"><div class="name">Jason</div><div class="steps" id="b"></div></div>
+  </div>
+</div>
+<script>
+  for (const [id, n] of [["a", 7], ["b", 7]]) {
+    document.getElementById(id).innerHTML = Array.from({ length: 100 }, (_, i) => `<div class="s${i < n ? " on" : ""}"></div>`).join("");
+  }
+</script></body></html>
