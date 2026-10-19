@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hundred Days</title>
-<meta name="description" content="Two people, 100 days, one post each per day: a hook and a bass line.">
+<meta name="description" content="Three people, 100 days, one post each per day: a hook, a bass line, and a vocal.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hundred Days">
 <meta property="og:title" content="Hundred Days">
-<meta property="og:description" content="One hook and one bass line, every day, for 100 days. Bobby and Jason.">
+<meta property="og:description" content="A hook, a bass line, and a vocal, every day, for 100 days. Bobby, Jason, and Drew.">
 <meta property="og:url" content="https://bomatson.github.io/hundred-days/">
 <meta property="og:image" content="https://bomatson.github.io/hundred-days/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Hundred Days: two sequencer lanes, one for a hook and one for a bass line">
+<meta property="og:image:alt" content="Hundred Days: three sequencer lanes, a hook, a bass line, and a vocal">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Hundred Days">
-<meta name="twitter:description" content="One hook and one bass line, every day, for 100 days.">
+<meta name="twitter:description" content="A hook, a bass line, and a vocal, every day, for 100 days.">
 <meta name="twitter:image" content="https://bomatson.github.io/hundred-days/og.png">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c0d10" media="(prefers-color-scheme: dark)">
@@ -37,6 +37,7 @@
     --hook-soft: #ffe7df;
     --bass: #1f4fff;
     --bass-soft: #e2e8ff;
+    --vox: #8f3dff;
     --focus: #1f4fff;
   }
   @media (prefers-color-scheme: dark) {
@@ -51,6 +52,7 @@
       --hook-soft: #3a1d14;
       --bass: #5b7dff;
       --bass-soft: #141c3c;
+      --vox: #a970ff;
       --focus: #5b7dff;
     }
   }
@@ -171,7 +173,7 @@
 
   <footer>
     <span>One post per person per day, for 100 days.</span>
-    <a href="https://github.com/bomatson/hundred-days">Rules and source</a>
+    <span><a href="upload/">Post from your phone</a> &nbsp; <a href="https://github.com/bomatson/hundred-days">Rules and source</a></span>
   </footer>
 </main>
 
@@ -186,7 +188,7 @@
   const S = window.Streaks;
   const res = await fetch("posts.json", { cache: "no-store" });
   const data = await res.json();
-  const colors = { bobby: "var(--hook)", jason: "var(--bass)" };
+  const colors = { bobby: "var(--hook)", jason: "var(--bass)", drew: "var(--vox)" };
   const spare = ["#ff4d1c", "#1f4fff", "#8f3dff", "#00a870"];
   data.participants.forEach((p, i) => { if (!colors[p.id]) colors[p.id] = spare[i % spare.length]; });
 
@@ -202,7 +204,7 @@
   if (todayDay < 1) {
     const n = 1 - todayDay;
     top.innerHTML = `Starts <strong>${dayDate(1, { month: "short", day: "numeric" })}</strong>`;
-    h1.innerHTML = `${n === 1 ? "Tomorrow" : n + " days"} <small>until day one. One hook and one bass line, every day, for a hundred days.</small>`;
+    h1.innerHTML = `${n === 1 ? "Tomorrow" : n + " days"} <small>until day one. A hook, a bass line, and a vocal, every day, for a hundred days.</small>`;
   } else if (todayDay > data.days) {
     top.innerHTML = `<strong>Finished</strong>`;
     h1.innerHTML = `One hundred days. <small>Started ${dayDate(1, { month: "long", day: "numeric", year: "numeric" })}.</small>`;

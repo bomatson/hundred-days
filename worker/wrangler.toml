@@ -1,0 +1,12 @@
+name = "hundred-days-upload"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+REPO = "bomatson/hundred-days"
+ALLOWED_ORIGINS = "https://bomatson.github.io"
+MAX_MB = "25"
+
+# Secrets, set once with:
+#   npx wrangler secret put GITHUB_TOKEN   (fine-grained PAT, Contents read/write, this repo only)
+#   npx wrangler secret put PASSCODES      ({"bobby":"...","jason":"...","drew":"..."})
