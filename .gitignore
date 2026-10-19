@@ -1,0 +1,7 @@
+_site/
+__pycache__/
+.DS_Store
+*.wav
+*.aif
+*.aiff
+!audio/*.wav
