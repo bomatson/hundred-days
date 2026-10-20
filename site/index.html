@@ -69,9 +69,12 @@
   main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 96px; }
 
   /* top bar */
-  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
   .wordmark { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; text-decoration: none; }
+  .right { display: flex; align-items: center; gap: 14px; }
   .today { color: var(--ink-2); font-size: 15px; text-align: right; }
+  .post-btn { font-weight: 600; font-size: 14px; color: var(--bg); background: var(--ink); text-decoration: none; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .post-btn:hover { opacity: 0.85; }
   .today strong { color: var(--ink); font-weight: 600; }
 
   /* hero: the sequencer */
@@ -158,7 +161,7 @@
 <main>
   <header class="top">
     <a class="wordmark" href="./">Hundred Days</a>
-    <div class="today" id="today"></div>
+    <div class="right"><div class="today" id="today"></div><a class="post-btn" href="upload/">Post</a></div>
   </header>
 
   <section class="seq" aria-label="Progress">
