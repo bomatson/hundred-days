@@ -51,7 +51,7 @@ python3 scripts/post.py stage ~/Desktop/hook.wav --note "F minor, 140"
 python3 scripts/post.py send
 ```
 
-`stage` converts WAV to 192 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet.
+`stage` converts WAV to 192 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet. Without `--note` it reads a sidecar note next to the audio file (`hook.wav` + `hook.md` or `hook.txt`), if there is one.
 `send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge.
 `status` shows today's day number and what is staged. `undo` drops a staged post.
 

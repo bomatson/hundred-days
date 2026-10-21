@@ -14,7 +14,7 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
    - If `$ARGUMENTS` names a file, use it.
    - Else if the user named a file in chat, use it.
    - Else use the newest audio file on `~/Desktop` from the last 24 h (the script does this by default). Say which file it picked before you stage it.
-3. Pick the note: use `--note` from `$ARGUMENTS` or from what the user said (key, BPM, sound). No note is fine.
+3. Pick the note: use `--note` from `$ARGUMENTS` or from what the user said (key, BPM, sound). With neither, the script reads a sidecar note next to the audio file (same name, `.md` or `.txt`; the ableton-hook skill writes one). Say which note it used. No note is fine.
 4. Stage: `python3 scripts/post.py stage [FILE] [--note "..."]`. Show the output line that names the staged file and its size.
 5. Stop and ask one short question: **"Send it?"** Do not send on your own.
 6. When the user says yes / send / go: run `python3 scripts/post.py send`. Report the PR URL. The PR auto-merges after the build check passes and the site updates about a minute later.
