@@ -5,7 +5,8 @@
       Convert the file to 192 kbps MP3 if needed, name it day-NNN-<who>.mp3, write the
       note, and commit it on a branch post/day-NNN-<who>. Nothing is pushed.
       Without AUDIO_FILE it picks the newest audio file on ~/Desktop from the
-      last 24 hours.
+      last 24 hours. Without --note it uses a sidecar note next to the audio
+      file, if there is one: the same name with .md or .txt (hook.wav -> hook.md).
   python3 scripts/post.py send
       Push the staged branch, open a PR, and turn on auto-merge. The site
       rebuilds when the PR merges.
@@ -55,6 +56,15 @@ def pick_newest(folder: Path, hours: float = 24, now: float | None = None) -> Pa
     return max(cands, key=lambda p: p.stat().st_mtime) if cands else None
 
 
+def sidecar_note(audio: Path) -> str:
+    """The text of <audio stem>.md or .txt next to the audio file, or "" when there is none."""
+    for ext in (".md", ".txt"):
+        p = audio.with_suffix(ext)
+        if p.is_file():
+            return p.read_text().strip()
+    return ""
+
+
 def current_branch() -> str:
     return sh("git", "rev-parse", "--abbrev-ref", "HEAD")
 
@@ -80,6 +90,7 @@ def cmd_stage(a):
         sys.exit("error: no audio file given and nothing new on ~/Desktop in the last 24 h.")
     if src.suffix.lower() not in AUDIO_EXTS:
         sys.exit(f"error: {src.name} is not an audio file I know ({sorted(AUDIO_EXTS)})")
+    note = a.note.strip() or sidecar_note(src)
 
     if staged_branch():
         sys.exit(f"error: a post is already staged on {current_branch()}. Run 'send' or 'undo' first.")
@@ -107,14 +118,14 @@ def cmd_stage(a):
         sh("ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
            "-codec:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", str(dest))
     note_path = ROOT / "audio" / f"day-{day:03d}-{a.who}.md"
-    if a.note:
-        note_path.write_text(a.note.strip() + "\n")
+    if note:
+        note_path.write_text(note + "\n")
     sh("git", "add", "audio/")
-    sh("git", "commit", "-q", "-m", f"Day {day:03d}: {a.who}" + (f" - {a.note.strip()}" if a.note else ""))
+    sh("git", "commit", "-q", "-m", f"Day {day:03d}: {a.who}" + (f" - {note}" if note else ""))
     size = dest.stat().st_size / 1e6
     print(f"staged day {day} for {a.who}: audio/{dest.name} ({size:.1f} MB) on branch {branch}")
-    if a.note:
-        print(f"note: {a.note.strip()}")
+    if note:
+        print(f"note: {note}")
     print("next: python3 scripts/post.py send")
 
 
