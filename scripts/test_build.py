@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -41,6 +42,29 @@ class BuildTests(unittest.TestCase):
         self.assertTrue((out / "audio" / "day-001-bobby.mp3").exists())
         self.assertFalse((out / "audio" / "day-001-bobby.md").exists())
         self.assertEqual(json.loads((out / "posts.json").read_text())["days"], 100)
+        self.assertIsNone(posts[0]["peaks"], "garbage bytes must not produce a waveform")
+
+    @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg not installed")
+    def test_peaks_from_real_audio_and_cache(self):
+        tone = self.tmp / "audio" / "day-009-bobby.mp3"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
+                        "-codec:a", "libmp3lame", "-b:a", "64k", str(tone)], check=True)
+        data = build.build(self.tmp, self.tmp / "_site")
+        post = next(p for p in data["posts"] if p["day"] == 9)
+        self.assertEqual(len(post["peaks"]), build.PEAKS)
+        self.assertAlmostEqual(post["duration"], 1.5, delta=0.15)
+        self.assertEqual(max(post["peaks"]), 1.0)
+        self.assertTrue(all(0 <= v <= 1 for v in post["peaks"]))
+        cached = list((self.tmp / ".peaks-cache").glob("*.json"))
+        self.assertEqual(len(cached), 1)
+        # second build hits the cache even without ffmpeg
+        real_which = shutil.which
+        shutil.which = lambda name: None
+        try:
+            again = build.build(self.tmp, self.tmp / "_site")
+        finally:
+            shutil.which = real_which
+        self.assertEqual(next(p for p in again["posts"] if p["day"] == 9)["peaks"], post["peaks"])
 
 
 class PostHelperTests(unittest.TestCase):
@@ -48,6 +72,11 @@ class PostHelperTests(unittest.TestCase):
         self.assertEqual(post.compute_day("2026-10-20", dt.date(2026, 10, 20)), 1)
         self.assertEqual(post.compute_day("2026-10-20", dt.date(2026, 10, 19)), 0)
         self.assertEqual(post.compute_day("2026-10-20", dt.date(2027, 1, 27)), 100)
+
+    def test_exports_at_192k(self):
+        src = (ROOT / "scripts" / "post.py").read_text()
+        self.assertIn('"-b:a", "192k"', src)
+        self.assertNotIn("320k", src)
 
     def test_target_name(self):
         self.assertEqual(post.target_name(7, "bobby", ".MP3"), "day-007-bobby.mp3")

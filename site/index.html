@@ -248,6 +248,11 @@
   axis.innerHTML = `<div></div><div class="axis"><span>1</span><span>25</span><span>50</span><span>75</span><span>100</span></div>`;
   lanes.appendChild(axis);
 
+  // player state (declared before the feed loop builds players)
+  let ctx = null;
+  let active = null;
+  const fmt = (t) => isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––";
+
   // feed
   const feed = document.getElementById("feed");
   const byDay = new Map();
@@ -271,7 +276,7 @@
       if (!post) return `<div class="post empty" style="--c:${colors[p.id]}"><div class="dot"></div><div>${esc(p.name)} did not post</div></div>`;
       const note = post.note ? `<div class="note">${esc(post.note)}</div>` : "";
       return `
-        <div class="post" style="--c:${colors[p.id]}" data-src="${post.file}">
+        <div class="post" style="--c:${colors[p.id]}" data-src="${post.file}" data-duration="${post.duration || ""}" data-peaks="${post.peaks ? post.peaks.join(",") : ""}">
           <button class="play" aria-label="Play ${esc(p.name)}, day ${day}">
             <svg class="ic-play"><use href="#i-play"/></svg><svg class="ic-pause"><use href="#i-pause"/></svg>
           </button>
@@ -288,9 +293,6 @@
   }
 
   // ---- players ----
-  let ctx = null;
-  let active = null;
-  const fmt = (t) => isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––";
 
   function makePlayer(el) {
     const src = el.dataset.src;
@@ -300,6 +302,11 @@
     const [base, prog] = wave.querySelectorAll("canvas");
     const setProg = (f) => { prog.style.clipPath = `inset(0 ${(100 - f * 100).toFixed(2)}% 0 0)`; };
     let audio = null, bars = null, duration = NaN, drawn = false;
+    if (el.dataset.peaks) {
+      bars = el.dataset.peaks.split(",").map(Number);
+      duration = Number(el.dataset.duration) || NaN;
+      if (isFinite(duration)) time.textContent = fmt(duration);
+    }
 
     function color(alpha) {
       const c = getComputedStyle(el).getPropertyValue("--c").trim();
@@ -375,7 +382,10 @@
       if (a.paused) a.play();
     });
     const io = new IntersectionObserver((entries) => {
-      if (entries.some((x) => x.isIntersecting)) { io.disconnect(); draw(); ensureAudio(); decode(); }
+      if (entries.some((x) => x.isIntersecting)) {
+        io.disconnect(); draw();
+        if (!bars) { ensureAudio(); decode(); }   // no precomputed waveform: fall back to decoding on view
+      }
     }, { rootMargin: "200px" });
     io.observe(el);
     return { redraw: () => drawn && draw() };
