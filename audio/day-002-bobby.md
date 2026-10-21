@@ -1,0 +1,1 @@
+Hook 002 "Neon Grit": F# minor, 128 BPM, Distant Majestic Lead over Flares Kit. deadmau5-style progressive house: a bouncy offbeat Moog bass under one climbing motif, sidechained to the kick, with a 16th roll to turn it around.
