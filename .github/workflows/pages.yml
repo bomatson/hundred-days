@@ -25,6 +25,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Waveform cache
+        uses: actions/cache@v4
+        with:
+          path: .peaks-cache
+          key: peaks-${{ hashFiles('audio/**') }}
+          restore-keys: peaks-
+      - name: ffmpeg
+        run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Run tests
         run: python3 -m unittest discover -s scripts -p "test_*.py" -v && node --test site/streaks.test.js worker/test.mjs
       - name: Build site

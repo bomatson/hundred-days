@@ -5,3 +5,4 @@ __pycache__/
 *.aif
 *.aiff
 !audio/*.wav
+.peaks-cache/

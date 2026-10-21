@@ -51,7 +51,7 @@ python3 scripts/post.py stage ~/Desktop/hook.wav --note "F minor, 140"
 python3 scripts/post.py send
 ```
 
-`stage` converts WAV to 320 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet.
+`stage` converts WAV to 192 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet.
 `send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge.
 `status` shows today's day number and what is staged. `undo` drops a staged post.
 
@@ -67,7 +67,7 @@ Files that do not match the pattern are ignored by the build and listed as warni
 ## How the site works
 
 - `challenge.json` holds the start date, day count, and participants.
-- `scripts/build.py` scans `audio/`, writes `posts.json`, and copies `site/` plus `audio/` into `_site/`.
+- `scripts/build.py` scans `audio/`, runs ffmpeg once per file to compute a 160-bar waveform (cached in `.peaks-cache/`), writes `posts.json`, and copies `site/` plus `audio/` into `_site/`. The page draws waveforms from `posts.json`, so visitors download audio only when they press play.
 - `site/streaks.js` computes current streak, longest streak, and the grid in the browser from `posts.json` and today's date.
 - `.github/workflows/pages.yml` runs the tests, builds, and deploys to GitHub Pages on every push to `main`. PRs run the tests and build as a check.
 - `site/upload/` is the phone upload page. It posts to the Cloudflare Worker in `worker/`, which checks the passcode, works out who is posting, and commits the file to `audio/` through the GitHub API. The Worker URL lives in `challenge.json` as `upload_endpoint`.
@@ -101,4 +101,4 @@ Then open http://localhost:8000.
 
 ## Sizes
 
-A 30-second MP3 at 320 kbps is about 1.2 MB. A 30-second voice memo is about 0.3 MB. 300 posts fit in well under 300 MB, under GitHub's 1 GB repo guidance. Keep WAVs out of the repo (the `.gitignore` blocks them outside `audio/`).
+A 30-second MP3 at 192 kbps is about 0.7 MB; a 2.5-minute one is about 3.6 MB. A 30-second voice memo is about 0.3 MB. 300 posts fit in well under 300 MB, under GitHub's 1 GB repo guidance. Keep WAVs out of the repo (the `.gitignore` blocks them outside `audio/`).

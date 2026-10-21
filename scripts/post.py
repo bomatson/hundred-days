@@ -2,7 +2,7 @@
 """Queue and send a daily post from this machine.
 
   python3 scripts/post.py stage [AUDIO_FILE] [--note TEXT] [--day N] [--who ID]
-      Convert the file to MP3 if needed, name it day-NNN-<who>.mp3, write the
+      Convert the file to 192 kbps MP3 if needed, name it day-NNN-<who>.mp3, write the
       note, and commit it on a branch post/day-NNN-<who>. Nothing is pushed.
       Without AUDIO_FILE it picks the newest audio file on ~/Desktop from the
       last 24 hours.
@@ -105,7 +105,7 @@ def cmd_stage(a):
         if not shutil.which("ffmpeg"):
             sys.exit("error: ffmpeg not found (brew install ffmpeg)")
         sh("ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
-           "-codec:a", "libmp3lame", "-b:a", "320k", "-ar", "44100", str(dest))
+           "-codec:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", str(dest))
     note_path = ROOT / "audio" / f"day-{day:03d}-{a.who}.md"
     if a.note:
         note_path.write_text(a.note.strip() + "\n")
