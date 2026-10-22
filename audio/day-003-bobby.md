@@ -1,0 +1,1 @@
+Hook 003 "Hard Talk": G minor, 130 BPM, Vital VLT Future Gun over Grit Life Kit with a Disrupt bass. Noisia / Jack Beats electro: a talking 3-3-2 bass that drops out under the two pickups, a lead that holds the downbeat, and a Shepard-tone swell that sneaks up on you from bar 13 into an octave-up last lap.
