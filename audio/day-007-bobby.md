@@ -1,0 +1,1 @@
+Hook 007 "Jason": Db major, 135 BPM, a sung line and Wurlitzer chords over a dry session kit. Built on Jason's day 4 bass line, every note of it, turned into a nu-disco groove: his holds get the chords, the chords get the voice.
