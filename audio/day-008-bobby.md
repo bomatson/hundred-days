@@ -1,0 +1,1 @@
+Hook 008 "Drew": C minor, 160 BPM, Drew's day 7 vocal over an 808 kit, a muted guitar, and a Juno lick. His take opens it alone, the beat lands under him at bar 3, a blues lick answers him in the chorus, and the breakdown is trap rolls over half-note sub.
