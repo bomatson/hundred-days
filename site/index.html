@@ -25,137 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #ffffff;
-    --ink: #000000;
-    --ink-2: #5f6368;
-    --ink-3: #a3a7ad;
-    --rule: #e4e6ea;
-    --step: #eceef2;
-    --hook: #ff4d1c;
-    --hook-soft: #ffe7df;
-    --bass: #1f4fff;
-    --bass-soft: #e2e8ff;
-    --vox: #8f3dff;
-    --focus: #1f4fff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0c0d10;
-      --ink: #f4f4f2;
-      --ink-2: #9a9ea6;
-      --ink-3: #5b5f67;
-      --rule: #22252b;
-      --step: #1b1d22;
-      --hook: #ff6a3d;
-      --hook-soft: #3a1d14;
-      --bass: #5b7dff;
-      --bass-soft: #141c3c;
-      --vox: #a970ff;
-      --focus: #5b7dff;
-    }
-  }
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: "Bricolage Grotesque", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 16px; line-height: 1.45;
-    font-feature-settings: "tnum" 1;
-  }
-  a { color: inherit; }
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
-  main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 96px; }
-
-  /* top bar */
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
-  .wordmark { font-weight: 800; font-size: 20px; letter-spacing: -0.02em; text-decoration: none; }
-  .right { display: flex; align-items: center; gap: 14px; }
-  .today { color: var(--ink-2); font-size: 15px; text-align: right; }
-  .post-btn { font-weight: 600; font-size: 14px; color: var(--bg); background: var(--ink); text-decoration: none; padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
-  .post-btn:hover { opacity: 0.85; }
-  .today strong { color: var(--ink); font-weight: 600; }
-
-  /* hero: the sequencer */
-  .seq { padding: 44px 0 36px; }
-  .seq h1 {
-    margin: 0 0 28px; font-size: clamp(44px, 9vw, 112px); line-height: 0.92; letter-spacing: -0.045em;
-    font-weight: 800; font-variation-settings: "opsz" 96; max-width: 11ch;
-  }
-  .seq h1 small { display: block; font-size: 0.38em; font-weight: 500; letter-spacing: -0.01em; color: var(--ink-2); margin-top: 14px; max-width: 32ch; line-height: 1.2; }
-  .lane { display: grid; grid-template-columns: 112px 1fr; gap: 16px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--rule); }
-  .lane:last-of-type { border-bottom: 1px solid var(--rule); }
-  .lane .who { display: flex; flex-direction: column; gap: 2px; }
-  .lane .name { font-weight: 600; font-size: 17px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
-  .lane .name::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
-  .lane .makes { color: var(--ink-2); font-size: 13px; }
-  .lane .steps { display: grid; grid-template-columns: repeat(100, 1fr); gap: 2px; }
-  .step { height: 30px; border-radius: 2px; background: var(--step); position: relative; }
-  .step.posted { background: var(--c); }
-  .step.missed { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); opacity: 0.45; }
-  .step.today { background: var(--step); box-shadow: inset 0 0 0 1.5px var(--ink); }
-  .step.today.posted { background: var(--c); box-shadow: none; }
-  .step.today::after {
-    content: ""; position: absolute; left: 50%; top: -9px; width: 1.5px; height: calc(100% + 18px);
-    background: var(--ink); transform: translateX(-50%); animation: blink 1.1s steps(2, start) infinite;
-  }
-  @keyframes blink { to { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .step.today::after { animation: none; } }
-  .step:hover::before {
-    content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-    background: var(--ink); color: var(--bg); font-size: 12px; padding: 3px 7px; border-radius: 4px; white-space: nowrap; z-index: 3; pointer-events: none;
-  }
-  .lane .nums { grid-column: 2; display: flex; gap: 28px; font-size: 14px; color: var(--ink-2); flex-wrap: wrap; }
-  .lane .nums b { color: var(--ink); font-weight: 600; font-size: 18px; margin-right: 4px; }
-  .lane .nums .flag { margin-left: auto; color: var(--c); font-weight: 500; }
-  .lane .nums .flag.muted { color: var(--ink-3); font-weight: 400; }
-  .axis { grid-column: 2; display: flex; justify-content: space-between; color: var(--ink-3); font-size: 12px; padding-top: 6px; }
-  @media (max-width: 880px) {
-    .lane { grid-template-columns: 1fr; gap: 10px; }
-    .lane .steps { grid-template-columns: repeat(25, 1fr); gap: 3px; }
-    .step { height: 18px; }
-    .lane .nums, .axis { grid-column: 1; }
-    .axis { display: none; }
-  }
-
-  /* feed */
-  .feed { margin-top: 56px; }
-  .feed-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-  .feed-head h2 { margin: 0; font-size: 15px; font-weight: 500; color: var(--ink-2); }
-  .day { display: grid; grid-template-columns: 112px 1fr; gap: 12px 20px; padding: 26px 0; border-top: 1px solid var(--rule); }
-  .day .n { font-weight: 800; font-size: 30px; letter-spacing: -0.04em; line-height: 1; font-variation-settings: "opsz" 48; }
-  .day .d { color: var(--ink-2); font-size: 13px; margin-top: 6px; }
-  .posts { display: grid; gap: 16px; }
-  .post { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: start; }
-  .post .play {
-    width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--c); color: #fff; cursor: pointer;
-    display: grid; place-items: center; padding: 0; transition: transform .12s ease;
-  }
-  .post .play:active { transform: scale(0.94); }
-  .post .play svg { width: 16px; height: 16px; fill: currentColor; }
-  .post .play .ic-pause { display: none; }
-  .post.playing .play .ic-play { display: none; }
-  .post.playing .play .ic-pause { display: block; }
-  .post .meta { display: flex; align-items: baseline; gap: 8px; font-size: 14px; margin-bottom: 4px; }
-  .post .meta .nm { font-weight: 600; }
-  .post .meta .time { color: var(--ink-2); margin-left: auto; }
-  .wave { position: relative; height: 44px; cursor: pointer; border-radius: 4px; overflow: hidden; }
-  .wave canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
-  .wave .prog { clip-path: inset(0 100% 0 0); pointer-events: none; }
-  .lane > *, .day > *, .post > *, .posts > * { min-width: 0; }
-  .post .note { color: var(--ink-2); font-size: 14px; margin-top: 6px; white-space: pre-wrap; }
-  .post.empty { color: var(--ink-3); font-size: 14px; align-items: center; min-height: 44px; }
-  .post.empty .dot { width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--rule); }
-  .empty-state { padding: 48px 0; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 18px; max-width: 40ch; }
-  .empty-state b { color: var(--ink); font-weight: 600; }
-  @media (max-width: 880px) {
-    .day { grid-template-columns: 1fr; gap: 10px; padding: 20px 0; }
-    .day .d { display: inline; margin-left: 8px; }
-  }
-
-  footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-</style>
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
 <main>
@@ -180,39 +50,27 @@
   </footer>
 </main>
 
-<svg width="0" height="0" style="position:absolute">
-  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></symbol>
-  <symbol id="i-pause" viewBox="0 0 16 16"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></symbol>
-</svg>
-
 <script src="streaks.js"></script>
+<script src="player.js"></script>
 <script>
 (async function () {
-  const S = window.Streaks;
-  const res = await fetch("posts.json", { cache: "no-store" });
-  const data = await res.json();
-  const colors = { bobby: "var(--hook)", jason: "var(--bass)", drew: "var(--vox)" };
-  const spare = ["#ff4d1c", "#1f4fff", "#8f3dff", "#00a870"];
-  data.participants.forEach((p, i) => { if (!colors[p.id]) colors[p.id] = spare[i % spare.length]; });
+  const S = window.Streaks, HD = window.HD;
+  const data = await HD.load();
+  const colors = HD.colors(data);
+  const esc = HD.esc;
 
   const todayDay = S.dayNumber(data.start_date, S.localToday());
-  const cur = Math.min(Math.max(todayDay, 0), data.days);
-  const dayDate = (d, opts) => new Date(S.parseDate(data.start_date) + (d - 1) * 86400000)
-    .toLocaleDateString(undefined, { timeZone: "UTC", ...opts });
-  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const dayDate = HD.dayDate(data);
 
   // top line + headline
-  const top = document.getElementById("today");
+  document.getElementById("today").innerHTML = HD.topLine(data, todayDay);
   const h1 = document.getElementById("headline");
   if (todayDay < 1) {
     const n = 1 - todayDay;
-    top.innerHTML = `Starts <strong>${dayDate(1, { month: "short", day: "numeric" })}</strong>`;
     h1.innerHTML = `${n === 1 ? "Tomorrow" : n + " days"} <small>until day one. A hook, a bass line, and a vocal, every day, for a hundred days.</small>`;
   } else if (todayDay > data.days) {
-    top.innerHTML = `<strong>Finished</strong>`;
     h1.innerHTML = `One hundred days. <small>Started ${dayDate(1, { month: "long", day: "numeric", year: "numeric" })}.</small>`;
   } else {
-    top.innerHTML = `<strong>Day ${todayDay}</strong> of ${data.days}`;
     h1.innerHTML = `Day ${todayDay} <small>${dayDate(todayDay, { weekday: "long", month: "long", day: "numeric" })}. ${data.days - todayDay} to go.</small>`;
   }
 
@@ -231,12 +89,11 @@
     if (todayDay >= 1 && todayDay <= data.days) {
       flag = s.postedToday ? `<span class="flag">Posted today</span>` : `<span class="flag muted">Not yet today</span>`;
     }
-    const streakWord = s.current === 1 ? "day streak" : "day streak";
     lane.innerHTML = `
       <div class="who"><div class="name">${esc(p.name)}</div><div class="makes">${esc(p.makes)}</div></div>
       <div class="steps" role="img" aria-label="${esc(p.name)}: ${s.total} posts, ${s.current} day streak">${steps}</div>
       <div class="nums">
-        <span><b>${s.current}</b>${streakWord}</span>
+        <span><b>${s.current}</b>day streak</span>
         <span><b>${s.longest}</b>best</span>
         <span><b>${s.total}</b>posts</span>
         ${flag}
@@ -248,12 +105,7 @@
   axis.innerHTML = `<div></div><div class="axis"><span>1</span><span>25</span><span>50</span><span>75</span><span>100</span></div>`;
   lanes.appendChild(axis);
 
-  // player state (declared before the feed loop builds players)
-  let ctx = null;
-  let active = null;
-  const fmt = (t) => isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––";
-
-  // feed
+  // feed: newest day first, each day links to its own page
   const feed = document.getElementById("feed");
   const byDay = new Map();
   for (const post of data.posts) {
@@ -266,132 +118,20 @@
       ? `<div class="empty-state"><b>Nothing here yet.</b> The first posts land on ${dayDate(1, { weekday: "long", month: "long", day: "numeric" })}.</div>`
       : `<div class="empty-state"><b>Nothing posted yet.</b> Day ${todayDay} is open.</div>`;
   }
-  const players = [];
   for (const day of [...byDay.keys()].sort((a, b) => b - a)) {
-    const posts = byDay.get(day);
     const row = document.createElement("div");
     row.className = "day";
-    const items = data.participants.map((p) => {
-      const post = posts.find((x) => x.who === p.id);
-      if (!post) return `<div class="post empty" style="--c:${colors[p.id]}"><div class="dot"></div><div>${esc(p.name)} did not post</div></div>`;
-      const note = post.note ? `<div class="note">${esc(post.note)}</div>` : "";
-      return `
-        <div class="post" style="--c:${colors[p.id]}" data-src="${post.file}" data-duration="${post.duration || ""}" data-peaks="${post.peaks ? post.peaks.join(",") : ""}">
-          <button class="play" aria-label="Play ${esc(p.name)}, day ${day}">
-            <svg class="ic-play"><use href="#i-play"/></svg><svg class="ic-pause"><use href="#i-pause"/></svg>
-          </button>
-          <div>
-            <div class="meta"><span class="nm">${esc(p.name)}</span><span>${esc(p.makes)}</span><span class="time">–:––</span></div>
-            <div class="wave"><canvas></canvas><canvas class="prog"></canvas></div>
-            ${note}
-          </div>
-        </div>`;
-    }).join("");
-    row.innerHTML = `<div><div class="n">Day ${day}</div><div class="d">${dayDate(day, { weekday: "short", month: "short", day: "numeric" })}</div></div><div class="posts">${items}</div>`;
+    row.innerHTML = `
+      <div class="head">
+        <a class="n" href="day/${day}/">Day ${day}</a>
+        <div class="d">${dayDate(day, { weekday: "short", month: "short", day: "numeric" })}</div>
+        <button class="btn ghost small share" type="button">Share</button>
+      </div>
+      <div class="posts">${HD.renderDay(data, colors, byDay.get(day), day, todayDay)}</div>`;
     feed.appendChild(row);
-    row.querySelectorAll(".post[data-src]").forEach((el) => players.push(makePlayer(el)));
+    HD.mountPlayers(row);
+    HD.shareButton(row.querySelector(".share"), HD.dayUrl(day), `Hundred Days, day ${day}`);
   }
-
-  // ---- players ----
-
-  function makePlayer(el) {
-    const src = el.dataset.src;
-    const btn = el.querySelector(".play");
-    const time = el.querySelector(".time");
-    const wave = el.querySelector(".wave");
-    const [base, prog] = wave.querySelectorAll("canvas");
-    const setProg = (f) => { prog.style.clipPath = `inset(0 ${(100 - f * 100).toFixed(2)}% 0 0)`; };
-    let audio = null, bars = null, duration = NaN, drawn = false;
-    if (el.dataset.peaks) {
-      bars = el.dataset.peaks.split(",").map(Number);
-      duration = Number(el.dataset.duration) || NaN;
-      if (isFinite(duration)) time.textContent = fmt(duration);
-    }
-
-    function color(alpha) {
-      const c = getComputedStyle(el).getPropertyValue("--c").trim();
-      return alpha ? "color-mix(in srgb, " + c + " 28%, transparent)" : c;
-    }
-    function draw() {
-      const w = wave.clientWidth, h = wave.clientHeight, dpr = window.devicePixelRatio || 1;
-      for (const c of [base, prog]) { c.width = w * dpr; c.height = h * dpr; }
-      const n = Math.max(40, Math.floor(w / 4));
-      const vals = bars ? resample(bars, n) : new Array(n).fill(0.18);
-      [[base, color(true)], [prog, color(false)]].forEach(([c, fill]) => {
-        const g = c.getContext("2d"); g.scale(dpr, dpr); g.fillStyle = fill;
-        const bw = w / n;
-        vals.forEach((v, i) => {
-          const bh = Math.max(2, v * h);
-          g.fillRect(i * bw + 0.5, (h - bh) / 2, bw - 1.5, bh);
-        });
-      });
-      drawn = true;
-    }
-    function resample(arr, n) {
-      const out = [], step = arr.length / n;
-      for (let i = 0; i < n; i++) {
-        let m = 0; const a = Math.floor(i * step), b = Math.max(a + 1, Math.floor((i + 1) * step));
-        for (let j = a; j < b; j++) m = Math.max(m, arr[j]);
-        out.push(m);
-      }
-      return out;
-    }
-    async function decode() {
-      try {
-        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-        const buf = await (await fetch(src)).arrayBuffer();
-        const ab = await ctx.decodeAudioData(buf);
-        duration = ab.duration;
-        const ch = ab.getChannelData(0), n = 400, step = Math.floor(ch.length / n);
-        const peaks = [];
-        let max = 0;
-        for (let i = 0; i < n; i++) {
-          let m = 0;
-          for (let j = i * step; j < (i + 1) * step; j += 8) { const v = Math.abs(ch[j]); if (v > m) m = v; }
-          peaks.push(m); if (m > max) max = m;
-        }
-        bars = peaks.map((v) => max ? Math.pow(v / max, 0.8) : 0);
-        time.textContent = fmt(duration);
-      } catch (e) { /* keep the flat placeholder */ }
-      draw();
-    }
-    function ensureAudio() {
-      if (audio) return audio;
-      audio = new Audio(src);
-      audio.preload = "metadata";
-      audio.addEventListener("loadedmetadata", () => { if (!isFinite(duration)) { duration = audio.duration; time.textContent = fmt(duration); } });
-      audio.addEventListener("timeupdate", () => {
-        const d = audio.duration || duration;
-        setProg(d ? audio.currentTime / d : 0);
-        time.textContent = `${fmt(audio.currentTime)} / ${fmt(d)}`;
-      });
-      audio.addEventListener("ended", () => { el.classList.remove("playing"); setProg(0); time.textContent = fmt(duration); });
-      audio.addEventListener("pause", () => el.classList.remove("playing"));
-      audio.addEventListener("play", () => {
-        if (active && active !== audio) active.pause();
-        active = audio; el.classList.add("playing");
-      });
-      return audio;
-    }
-    btn.addEventListener("click", () => { const a = ensureAudio(); a.paused ? a.play() : a.pause(); });
-    wave.addEventListener("click", (e) => {
-      const a = ensureAudio();
-      const d = a.duration || duration; if (!d) return;
-      const r = wave.getBoundingClientRect();
-      a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * d;
-      if (a.paused) a.play();
-    });
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((x) => x.isIntersecting)) {
-        io.disconnect(); draw();
-        if (!bars) { ensureAudio(); decode(); }   // no precomputed waveform: fall back to decoding on view
-      }
-    }, { rootMargin: "200px" });
-    io.observe(el);
-    return { redraw: () => drawn && draw() };
-  }
-  let rt;
-  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => players.forEach((p) => p.redraw()), 120); });
 })();
 </script>
 </body>

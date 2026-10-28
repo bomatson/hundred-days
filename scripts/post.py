@@ -19,6 +19,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -143,6 +144,17 @@ def cmd_send(a):
     sh("git", "checkout", "-q", "main")
     print(f"sent: {url}")
     print("the site updates about a minute after the PR merges.")
+    link = day_url(config(), branch)
+    if link:
+        print(f"day page to share: {link}")
+
+
+def day_url(cfg: dict, branch: str) -> str | None:
+    """The page for the day a post/day-NNN-<who> branch posts, or None for other branches."""
+    m = re.match(r"post/day-(\d{3})-", branch)
+    if not m or not cfg.get("site_url"):
+        return None
+    return f"{cfg['site_url'].rstrip('/')}/day/{int(m.group(1))}/"
 
 
 def cmd_status(a):

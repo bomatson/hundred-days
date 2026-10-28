@@ -44,6 +44,50 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(json.loads((out / "posts.json").read_text())["days"], 100)
         self.assertIsNone(posts[0]["peaks"], "garbage bytes must not produce a waveform")
 
+    def test_build_writes_one_page_per_day(self):
+        build.build(self.tmp, self.tmp / "_site")
+        out = self.tmp / "_site"
+        self.assertFalse((out / "day.html").exists(), "the raw template must not ship")
+        self.assertTrue((out / "day" / "1" / "index.html").exists())
+        self.assertTrue((out / "day" / "100" / "index.html").exists())
+        self.assertFalse((out / "day" / "0").exists())
+        self.assertFalse((out / "day" / "101").exists())
+
+        first = (out / "day" / "1" / "index.html").read_text()
+        self.assertIn("<title>Day 1 · Hundred Days</title>", first)
+        self.assertIn('<html lang="en" data-root="../../">', first)
+        self.assertIn('<link rel="canonical" href="https://bomatson.github.io/hundred-days/day/1/">', first)
+        self.assertIn('content="https://bomatson.github.io/hundred-days/og.png"', first)
+        self.assertIn("Bobby: F minor, 140 · Jason posted a bass line.", first)
+        self.assertIn("Tuesday, October 20, 2026", first)
+        self.assertIn("const DAY = 1;", first)
+        self.assertIn('href="../2/"', first)
+        self.assertNotIn('href="../0/"', first)
+        self.assertNotIn("{{", first)
+
+        last = (out / "day" / "100" / "index.html").read_text()
+        self.assertIn("Wednesday, January 27, 2027", last)
+        self.assertIn('href="../99/"', last)
+        self.assertNotIn('href="../101/"', last)
+
+        quiet = (out / "day" / "3" / "index.html").read_text()   # day 3 only had a skipped file
+        self.assertIn("Day 3 of 100. Nothing posted yet.", quiet)
+
+    def test_day_description_escapes_and_truncates(self):
+        cfg = json.loads((ROOT / "challenge.json").read_text())
+        posts = [{"who": "bobby", "note": 'A "quoted" <note> & more'}, {"who": "drew", "note": ""}]
+        self.assertEqual(build.day_description(cfg, posts, 4), 'Bobby: A "quoted" <note> & more · Drew posted a vocal take.')
+        self.assertEqual(build.render_day("{{DESCRIPTION}}", cfg, posts, 4),
+                         "Bobby: A &quot;quoted&quot; &lt;note&gt; &amp; more · Drew posted a vocal take.")
+        long = [{"who": "bobby", "note": "word " * 100}]
+        desc = build.day_description(cfg, long, 4)
+        self.assertLessEqual(len(desc), build.MAX_DESC)
+        self.assertTrue(desc.endswith("word…"))
+
+    def test_render_day_falls_back_to_the_default_site_url(self):
+        cfg = {**json.loads((ROOT / "challenge.json").read_text()), "site_url": ""}
+        self.assertEqual(build.render_day("{{URL}}", cfg, [], 7), "https://bomatson.github.io/hundred-days/day/7/")
+
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg not installed")
     def test_peaks_from_real_audio_and_cache(self):
         tone = self.tmp / "audio" / "day-009-bobby.mp3"

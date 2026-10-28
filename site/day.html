@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- Template for one day page. scripts/build.py fills the {{...}} fields and writes it to day/N/index.html. -->
+<html lang="en" data-root="../../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day {{DAY}} · Hundred Days</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<link rel="canonical" href="{{URL}}">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hundred Days">
+<meta property="og:title" content="Day {{DAY}} · Hundred Days">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{URL}}">
+<meta property="og:image" content="{{SITE_URL}}og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Hundred Days: three sequencer lanes, a hook, a bass line, and a vocal">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Day {{DAY}} · Hundred Days">
+<meta name="twitter:description" content="{{DESCRIPTION}}">
+<meta name="twitter:image" content="{{SITE_URL}}og.png">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0d10" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../site.css">
+</head>
+<body>
+<main>
+  <header class="top">
+    <a class="wordmark" href="../../">Hundred Days</a>
+    <div class="right"><div class="today" id="today"></div><a class="post-btn" href="../../upload/">Post</a></div>
+  </header>
+
+  <section class="detail" aria-label="Day {{DAY}}">
+    <h1>Day {{DAY}} <small>{{DATE}}</small></h1>
+    <div class="posts" id="posts"></div>
+    <div class="actions">
+      <button class="btn" id="share" type="button">Share this day</button>
+      <a class="btn ghost" href="../../">All days</a>
+    </div>
+    <nav class="daynav" aria-label="Other days">{{PREV}}{{NEXT}}</nav>
+  </section>
+
+  <footer>
+    <span>One post per person per day, for 100 days.</span>
+    <span><a href="../../upload/">Post from your phone</a> &nbsp; <a href="https://github.com/bomatson/hundred-days">Rules and source</a></span>
+  </footer>
+</main>
+
+<script src="../../streaks.js"></script>
+<script src="../../player.js"></script>
+<script>
+(async function () {
+  const DAY = {{DAY}};
+  const S = window.Streaks, HD = window.HD;
+  const data = await HD.load();
+  const colors = HD.colors(data);
+  const todayDay = S.dayNumber(data.start_date, S.localToday());
+  const dayDate = HD.dayDate(data);
+
+  document.getElementById("today").innerHTML = HD.topLine(data, todayDay);
+
+  const box = document.getElementById("posts");
+  const posts = data.posts.filter((p) => p.day === DAY);
+  if (DAY > todayDay && !posts.length) {
+    box.className = "empty-state";
+    box.innerHTML = `<b>Not yet.</b> Day ${DAY} is ${dayDate(DAY, { weekday: "long", month: "long", day: "numeric" })}.`;
+  } else {
+    box.innerHTML = HD.renderDay(data, colors, posts, DAY, todayDay);
+    HD.mountPlayers(box);
+  }
+
+  HD.shareButton(document.getElementById("share"), location.href, document.title);
+})();
+</script>
+</body>
+</html>
