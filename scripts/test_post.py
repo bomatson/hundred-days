@@ -26,6 +26,13 @@ class PostTests(unittest.TestCase):
     def test_target_name(self):
         self.assertEqual(post.target_name(2, "bobby", ".WAV"), "day-002-bobby.wav")
 
+    def test_day_url_from_staged_branch(self):
+        cfg = {"site_url": "https://bomatson.github.io/hundred-days/"}
+        self.assertEqual(post.day_url(cfg, "post/day-009-bobby"), "https://bomatson.github.io/hundred-days/day/9/")
+        self.assertEqual(post.day_url(cfg, "post/day-100-drew"), "https://bomatson.github.io/hundred-days/day/100/")
+        self.assertIsNone(post.day_url(cfg, "main"))
+        self.assertIsNone(post.day_url({}, "post/day-009-bobby"))
+
     def test_sidecar_note_reads_md_then_txt(self):
         wav = self.tmp / "Hook 002 Neon Stairs.wav"
         wav.write_bytes(b"\x00")

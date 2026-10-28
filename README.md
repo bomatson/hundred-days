@@ -7,6 +7,7 @@ Three people, 100 days, one post each per day.
 - **Drew** posts a vocal take (voice memo from the phone is fine).
 
 Site: **https://bomatson.github.io/hundred-days/**
+One day, to share: **https://bomatson.github.io/hundred-days/day/9/** (any day number 1 to 100; every day on the site has a Share button)
 Post from a phone: **https://bomatson.github.io/hundred-days/upload/**
 Start date: **2026-10-20** (day 1). Day 100 is 2027-01-27.
 
@@ -52,7 +53,7 @@ python3 scripts/post.py send
 ```
 
 `stage` converts WAV to 192 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet. Without `--note` it reads a sidecar note next to the audio file (`hook.wav` + `hook.md` or `hook.txt`), if there is one.
-`send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge.
+`send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge. It also prints the day page link (`.../day/N/`) to send to the others.
 `status` shows today's day number and what is staged. `undo` drops a staged post.
 
 ## File naming
@@ -66,8 +67,10 @@ Files that do not match the pattern are ignored by the build and listed as warni
 
 ## How the site works
 
-- `challenge.json` holds the start date, day count, and participants.
+- `challenge.json` holds the start date, day count, participants, and the public `site_url`.
 - `scripts/build.py` scans `audio/`, runs ffmpeg once per file to compute a 160-bar waveform (cached in `.peaks-cache/`), writes `posts.json`, and copies `site/` plus `audio/` into `_site/`. The page draws waveforms from `posts.json`, so visitors download audio only when they press play.
+- The build also writes one page per day, `day/N/index.html` for N = 1 to 100, from the template `site/day.html`. Each page carries its own title and link preview text (the day's notes), so a shared link shows what was posted. The page itself reads `posts.json` and renders the players like the index does.
+- `site/site.css` and `site/player.js` are shared by the index and the day pages: the styles, the post rows, the waveform players, and the Share button (share sheet on a phone, copy link on a desktop).
 - `site/streaks.js` computes current streak, longest streak, and the grid in the browser from `posts.json` and today's date.
 - `.github/workflows/pages.yml` runs the tests, builds, and deploys to GitHub Pages on every push to `main`. PRs run the tests and build as a check.
 - `site/upload/` is the phone upload page. It posts to the Cloudflare Worker in `worker/`, which checks the passcode, works out who is posting, and commits the file to `audio/` through the GitHub API. The Worker URL lives in `challenge.json` as `upload_endpoint`.
