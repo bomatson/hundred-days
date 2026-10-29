@@ -1,0 +1,1 @@
+Hook 010 "Hold": Bb major, 85 BPM, 80s synth brass lead over an FM electric piano and the Virtuosity kit. recreated from the hold music i recorded on my phone this morning. your call is important to us.
