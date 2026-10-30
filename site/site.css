@@ -127,6 +127,9 @@ main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 96px; }
 .post .meta { display: flex; align-items: baseline; gap: 8px; font-size: 14px; margin-bottom: 4px; }
 .post .meta .nm { font-weight: 600; }
 .post .meta .time { color: var(--ink-2); margin-left: auto; }
+.post .meta .dl { color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 5px; }
+.post .meta .dl svg { width: 14px; height: 14px; fill: currentColor; }
+.post .meta .dl:hover { color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
 .wave { position: relative; height: 44px; cursor: pointer; border-radius: 4px; overflow: hidden; }
 .wave canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
 .wave .prog { clip-path: inset(0 100% 0 0); pointer-events: none; }

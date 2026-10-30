@@ -48,7 +48,7 @@
           <svg class="ic-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"/></svg>
         </button>
         <div>
-          <div class="meta"><span class="nm">${esc(p.name)}</span><span>${esc(p.makes)}</span><span class="time">–:––</span></div>
+          <div class="meta"><span class="nm">${esc(p.name)}</span><span>${esc(p.makes)}</span><span class="time">–:––</span><a class="dl" href="${ROOT}${esc(post.file)}" download title="Download" aria-label="Download ${esc(p.name)}, day ${day}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 1.5h2v6.7l2.6-2.6 1.4 1.4L8 12 3 7l1.4-1.4L7 8.2zM3 13h10v1.5H3z"/></svg></a></div>
           <div class="wave"><canvas></canvas><canvas class="prog"></canvas></div>
           ${note}
         </div>
