@@ -34,7 +34,7 @@ jobs:
       - name: ffmpeg
         run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - name: Run tests
-        run: python3 -m unittest discover -s scripts -p "test_*.py" -v && node --test site/streaks.test.js worker/test.mjs
+        run: python3 -m unittest discover -s scripts -p "test_*.py" -v && node --test site/streaks.test.js site/player.test.js worker/test.mjs
       - name: Build site
         run: python3 scripts/build.py
       - uses: actions/upload-pages-artifact@v3
