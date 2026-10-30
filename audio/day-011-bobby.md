@@ -1,0 +1,1 @@
+Hook 011 "Fuse": E minor, 132 BPM, distorted guitar riff over a crushed acoustic break, 303 bass and house-organ stabs. Big beat with a nu-rave edge: machine-gun 16ths, a bass that walks, stabs on the kick, swells that breathe.
