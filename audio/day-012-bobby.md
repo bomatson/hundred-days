@@ -1,0 +1,1 @@
+Hook 012 "Lux": B minor, 128 BPM, Wurlitzer lead over an acoustic beat played on the pads. A De Lux groove heard through Radiohead: the loop repeats until the chords turn at bar 5 and the strings come in huge.
