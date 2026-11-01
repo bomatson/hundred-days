@@ -1,0 +1,1 @@
+Hook 013 "Twitch": A mixolydian, 122 BPM, Chorusy Keys + Ambient E-Guitar lead over an acoustic kit, REAPER. Psycho Killer bass engine under a dream-pop pad with tape drift; the lead and the intro drums are my pad takes, the organ swells in like Akira.
