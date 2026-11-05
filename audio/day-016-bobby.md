@@ -1,1 +1,1 @@
-Hook 017 "Confidence": G major, 115 BPM, three bells (Fantasy Bell, Easy Mallet, Music Box) over an acoustic kit with a 909 under it and a Jupiter bass. Holiday-style: a pad-and-bells build with a sneaking swell, then the floor drops in and the bell line climbs an octave in stairs.
+confidence. 115 bpm, g major. bells climb the stairs while the floor drops in. ride from the pads.
