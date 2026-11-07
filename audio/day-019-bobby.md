@@ -1,0 +1,1 @@
+kebyar. 124 bpm, pelog on e. one marimba starts alone and a second one fills its holes, then the drums and a chant that counts in threes. the bass waits for the chorus, the chord opens up, and the marimbas jump an octave for the last four bars.
