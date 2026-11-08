@@ -1,0 +1,1 @@
+feel. 122 bpm, bb dorian. deep house built from a sixty second pad clip: four of its chords, the roots as an octave bassline, my pad hits on the kick. the riff waits for bar nine, then the chords move on to the clip's second phrase.
