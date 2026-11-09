@@ -25,8 +25,12 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from build import AUDIO_RE   # the file names the site accepts: day-NNN-<who>.<ext>
 
 ROOT = Path(__file__).resolve().parent.parent
+BRANCH_RE = re.compile(r"post/day-(\d{3})-")
 AUDIO_EXTS = {".wav", ".aif", ".aiff", ".mp3", ".m4a", ".flac", ".ogg", ".caf"}
 KEEP_AS_IS = {".mp3", ".m4a"}
 
@@ -63,14 +67,30 @@ def held_note(start_date: str, day: int, today: dt.date) -> str:
     return f"day {day} is {d:%A, %b} {d.day}: the site holds this post until then."
 
 
-def held_posts(audio: Path, today_day: int) -> list[tuple[int, str]]:
-    """(day, who) for every audio file in audio/ posted for a day after today_day, in day order."""
+def today(cfg: dict) -> dt.date:
+    """Today on the challenge's calendar (challenge.json "timezone"): the same clock build.py uses."""
+    return dt.datetime.now(ZoneInfo(cfg.get("timezone") or "UTC")).date()
+
+
+def posts_in(audio: Path, ids: set[str] | None = None) -> set[tuple[int, str]]:
+    """(day, who) for every audio file in audio/ that the build accepts, for the given participants (or all)."""
     found = set()
     for f in audio.iterdir():
-        m = re.match(r"^day-(\d{3})-([a-z0-9]+)\.[a-z0-9]+$", f.name, re.I)
-        if m and f.suffix.lower() != ".md" and int(m.group(1)) > today_day:
+        m = AUDIO_RE.match(f.name)
+        if m and (ids is None or m.group(2).lower() in ids):
             found.add((int(m.group(1)), m.group(2).lower()))
-    return sorted(found)
+    return found
+
+
+def held_posts(audio: Path, today_day: int, ids: set[str] | None = None) -> list[tuple[int, str]]:
+    """The posts in audio/ for days after today_day, in day order."""
+    return sorted(p for p in posts_in(audio, ids) if p[0] > today_day)
+
+
+def next_open_day(audio: Path, who: str, from_day: int, days: int) -> int | None:
+    """The first day from from_day on with no post from who, or None when the rest are taken."""
+    taken = {d for d, w in posts_in(audio) if w == who}
+    return next((d for d in range(max(from_day, 1), days + 1) if d not in taken), None)
 
 
 def pick_newest(folder: Path, hours: float = 24, now: float | None = None) -> Path | None:
@@ -103,7 +123,7 @@ def cmd_stage(a):
     ids = [p["id"] for p in cfg["participants"]]
     if a.who not in ids:
         sys.exit(f"error: --who must be one of {ids}")
-    day = a.day or compute_day(cfg["start_date"], dt.date.today())
+    day = a.day or compute_day(cfg["start_date"], today(cfg))
     if day < 1:
         sys.exit(f"error: the challenge starts {cfg['start_date']}; today is day {day}. Use --day to override.")
     if day > cfg["days"]:
@@ -128,12 +148,18 @@ def cmd_stage(a):
     else:
         base = "main"
     branch = f"post/day-{day:03d}-{a.who}"
+    prev = current_branch()
     sh("git", "checkout", "-q", "-B", branch, base)
 
     ext = src.suffix.lower() if src.suffix.lower() in KEEP_AS_IS else ".mp3"
     dest = ROOT / "audio" / target_name(day, a.who, ext)
-    if dest.exists() and not a.force:
-        sys.exit(f"error: {dest.name} already exists. Use --force to replace it.")
+    if (day, a.who) in posts_in(ROOT / "audio") and not a.force:
+        # back out, so the next stage does not find this empty branch "already staged"
+        nxt = next_open_day(ROOT / "audio", a.who, day + 1, cfg["days"])
+        sh("git", "checkout", "-q", prev)
+        sh("git", "branch", "-q", "-D", branch)
+        hint = f"Use --day {nxt} for the next open day, or --force to replace it." if nxt else "Use --force to replace it."
+        sys.exit(f"error: day {day} already has a post from {a.who}. {hint}")
     if ext == src.suffix.lower():
         shutil.copy2(src, dest)
     else:
@@ -150,7 +176,7 @@ def cmd_stage(a):
     print(f"staged day {day} for {a.who}: audio/{dest.name} ({size:.1f} MB) on branch {branch}")
     if note:
         print(f"note: {note}")
-    ahead = held_note(cfg["start_date"], day, dt.date.today())
+    ahead = held_note(cfg["start_date"], day, today(cfg))
     if ahead:
         print(ahead)
     print("next: python3 scripts/post.py send")
@@ -170,17 +196,21 @@ def cmd_send(a):
     sh("git", "checkout", "-q", "main")
     cfg = config()
     print(f"sent: {url}")
-    m = re.match(r"post/day-(\d{3})-", branch)
-    ahead = held_note(cfg["start_date"], int(m.group(1)), dt.date.today()) if m else ""
+    m = BRANCH_RE.match(branch)
+    day = int(m.group(1)) if m else 0
+    ahead = held_note(cfg["start_date"], day, today(cfg)) if day else ""
     print(ahead or "the site updates about a minute after the PR merges.")
     link = day_url(cfg, branch)
-    if link:
+    if link and ahead:
+        d = day_date(cfg["start_date"], day)
+        print(f"day page, share it on {d:%A, %b} {d.day} (a link shared early keeps an empty preview): {link}")
+    elif link:
         print(f"day page to share: {link}")
 
 
 def day_url(cfg: dict, branch: str) -> str | None:
     """The page for the day a post/day-NNN-<who> branch posts, or None for other branches."""
-    m = re.match(r"post/day-(\d{3})-", branch)
+    m = BRANCH_RE.match(branch)
     if not m or not cfg.get("site_url"):
         return None
     return f"{cfg['site_url'].rstrip('/')}/day/{int(m.group(1))}/"
@@ -188,15 +218,20 @@ def day_url(cfg: dict, branch: str) -> str | None:
 
 def cmd_status(a):
     cfg = config()
-    day = compute_day(cfg["start_date"], dt.date.today())
+    day = compute_day(cfg["start_date"], today(cfg))
     print(f"today is day {day} of {cfg['days']} (start {cfg['start_date']})")
-    held = held_posts(ROOT / "audio", day)
+    ids = {p["id"] for p in cfg["participants"]}
+    held = held_posts(ROOT / "audio", day, ids)
     if held:
         items = []
         for d, who in held:
             date = day_date(cfg["start_date"], d)
             items.append(f"day {d} {who} ({date:%a %b} {date.day})")
         print("held for later: " + ", ".join(items))
+    nxt = next_open_day(ROOT / "audio", a.who, day, cfg["days"])
+    if nxt and nxt != day:
+        date = day_date(cfg["start_date"], nxt)
+        print(f"next open day for {a.who}: {nxt} ({date:%a %b} {date.day}); stage with --day {nxt}")
     b = staged_branch()
     if b:
         files = sh("git", "diff", "--name-only", "main...HEAD")
@@ -229,7 +264,9 @@ if __name__ == "__main__":
     s.add_argument("--force", action="store_true")
     s.set_defaults(fn=cmd_stage)
     sub.add_parser("send").set_defaults(fn=cmd_send)
-    sub.add_parser("status").set_defaults(fn=cmd_status)
+    st = sub.add_parser("status")
+    st.add_argument("--who", default=os.environ.get("HUNDRED_DAYS_WHO", "bobby"))
+    st.set_defaults(fn=cmd_status)
     sub.add_parser("undo").set_defaults(fn=cmd_undo)
     args = ap.parse_args()
     args.fn(args)

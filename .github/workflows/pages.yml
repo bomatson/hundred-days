@@ -6,19 +6,22 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    # Release the day's held posts (see scripts/build.py). Cron is UTC; New York is UTC-5
-    # for the rest of the challenge, so these run at 00:07 and 01:07 there. The second
-    # run covers a skipped or late first one.
-    - cron: "7 5 * * *"
-    - cron: "7 6 * * *"
+    # Release the day's held posts (see scripts/build.py): just after midnight in New York,
+    # and once more an hour later in case GitHub skipped or delayed the first run.
+    - cron: "7 0 * * *"
+      timezone: "America/New_York"
+    - cron: "7 1 * * *"
+      timezone: "America/New_York"
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# One deploy at a time. PR checks get their own group, so a waiting scheduled run is not
+# bumped by a PR check (GitHub keeps only one pending run per group).
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && github.ref || 'pages' }}
   cancel-in-progress: false
 
 jobs:

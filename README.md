@@ -28,7 +28,7 @@ Open **https://bomatson.github.io/hundred-days/upload/** on your phone. Add it t
 3. Check the day. It defaults to today.
 4. Add a one-line note if you want. Tap **Post day N as ...**.
 
-The file lands in the repo under your name and the site updates about a minute later. If you already posted that day, the page asks whether to replace it.
+The file lands in the repo under your name and the site updates about a minute later. A post for a later day shows up on that day. If you already posted that day, the page asks whether to replace it.
 
 Formats that work: `.m4a` (Voice Memos default), `.mp3`, `.wav`, `.caf`, `.ogg`, `.aif`. Max 25 MB. No conversion needed.
 
@@ -53,10 +53,10 @@ python3 scripts/post.py send
 ```
 
 `stage` converts WAV to 192 kbps MP3, names it `audio/day-NNN-bobby.mp3`, writes the note, and commits on a branch `post/day-NNN-bobby`. Nothing leaves the machine yet. Without `--note` it reads a sidecar note next to the audio file (`hook.wav` + `hook.md` or `hook.txt`), if there is one.
-`send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge. It also prints the day page link (`.../day/N/`) to send to the others.
-`status` shows today's day number, what is staged, and which posts are held for later days. `undo` drops a staged post.
+`send` pushes the branch, opens a PR, and sets it to auto-merge once the build check passes. The site updates about a minute after the merge (a post for a later day shows up on that day). It also prints the day page link (`.../day/N/`) to send to the others.
+`status` shows today's day number, what is staged, which posts are held for later days, and the next open day when today is taken. `undo` drops a staged post.
 
-Made two hooks in one sitting? Post the second one for a later day with `--day N` (for example `--day 23`). It merges right away, but the site holds it until that day: not on the grid, not in the feed, not on its day page, and its audio is not public. It appears just after midnight New York time on its day. The same goes for a phone upload made for a later day.
+Made two hooks in one sitting? Post the second one for the next open day with `--day N` (`status` prints N). It merges right away, but the site holds it until that day: not on the grid, not in the feed, not on its day page, and its audio is not served. It shows up just after midnight New York time on its day. Share its day link on that day, not before: a link shared early gets an empty preview in Messages. The repo itself is public, so the file and the PR title (with the note) are on GitHub from the merge on; to keep a hook a surprise, stage it now and send it on its day. The same hold applies to a phone upload made for a later day.
 
 ## File naming
 
@@ -71,11 +71,11 @@ Files that do not match the pattern are ignored by the build and listed as warni
 
 - `challenge.json` holds the start date, the `timezone` that says when a day begins (New York), the day count, participants, and the public `site_url`.
 - `scripts/build.py` scans `audio/`, runs ffmpeg once per file to compute a 160-bar waveform (cached in `.peaks-cache/`), writes `posts.json`, and copies `site/` plus `audio/` into `_site/`. The page draws waveforms from `posts.json`, so visitors download audio only when they press play.
-- A post for a day that has not come yet is held: the build leaves it out of `posts.json`, out of `_site/audio/`, and out of its day page, so nothing about it is public early. `python3 scripts/build.py --today 2026-11-11` builds as if it were that date, to preview a held post locally. The browser also hides any day after the viewer's own today (`Streaks.upToDay`), in case the viewer's calendar is behind the build's.
+- A post for a day that has not come yet is held: the build leaves it out of `posts.json`, out of `_site/audio/`, and out of its day page, so the site shows nothing about it early. Only the files of released posts are copied into `_site/audio/`. `python3 scripts/build.py --today 2026-11-11` builds as if it were that date, to preview a held post locally. The pages count "today" on the viewer's own calendar, while the build counts it in New York, so a viewer west of New York sees a new day's post a few hours before their own midnight.
 - The build also writes one page per day, `day/N/index.html` for N = 1 to 100, from the template `site/day.html`. Each page carries its own title and link preview text (the day's notes), so a shared link shows what was posted. The page itself reads `posts.json` and renders the players like the index does.
 - `site/site.css` and `site/player.js` are shared by the index and the day pages: the styles, the post rows, the waveform players, and the Share button (share sheet on a phone, copy link on a desktop).
 - `site/streaks.js` computes current streak, longest streak, and the grid in the browser from `posts.json` and today's date.
-- `.github/workflows/pages.yml` runs the tests, builds, and deploys to GitHub Pages on every push to `main`, and again on a schedule at 00:07 and 01:07 New York time. The scheduled run is what releases a held post on its day. PRs run the tests and build as a check.
+- `.github/workflows/pages.yml` runs the tests, builds, and deploys to GitHub Pages on every push to `main`, and again on a schedule at 00:07 and 01:07 New York time (the schedule names its own `timezone`, so this holds across daylight saving changes). The scheduled run is what releases a held post on its day. If it has not run by 01:30, start one by hand from the Actions tab (Run workflow). PRs run the tests and build as a check. The schedule can go once day 100 has passed.
 - `site/upload/` is the phone upload page. It posts to the Cloudflare Worker in `worker/`, which checks the passcode, works out who is posting, and commits the file to `audio/` through the GitHub API. The Worker URL lives in `challenge.json` as `upload_endpoint`.
 
 ## Upload Worker (one-time setup)
@@ -99,7 +99,7 @@ Run it locally:
 
 ```
 python3 -m unittest discover -s scripts -p "test_*.py"
-node --test site/streaks.test.js worker/test.mjs
+node --test site/streaks.test.js site/player.test.js worker/test.mjs
 python3 scripts/build.py && python3 -m http.server -d _site 8000
 ```
 

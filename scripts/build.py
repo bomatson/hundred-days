@@ -175,9 +175,8 @@ def build(root: Path, out: Path, today: dt.date | None = None) -> dict:
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(root / "site", out, ignore=shutil.ignore_patterns(DAY_TEMPLATE))
-    held_files = {Path(p["file"]).name for p in held}
-    shutil.copytree(root / "audio", out / "audio",
-                    ignore=lambda _dir, names: [n for n in names if n == ".gitkeep" or n.endswith(".md") or n in held_files])
+    keep = {Path(p["file"]).name for p in posts}   # only released posts ship: no notes, held posts, or skipped files
+    shutil.copytree(root / "audio", out / "audio", ignore=lambda _dir, names: [n for n in names if n not in keep])
     (out / "posts.json").write_text(json.dumps(data, indent=2))
     (out / ".nojekyll").write_text("")
     template = (root / "site" / DAY_TEMPLATE).read_text()

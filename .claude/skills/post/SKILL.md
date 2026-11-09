@@ -9,7 +9,7 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
 
 ## Steps
 
-1. Run `python3 scripts/post.py status`. Report the day number, whether something is already staged, and any posts held for later days.
+1. Run `python3 scripts/post.py status`. Report the day number, whether something is already staged, any posts held for later days, and the next open day when today is taken.
 2. Pick the audio file:
    - If `$ARGUMENTS` names a file, use it.
    - Else if the user named a file in chat, use it.
@@ -17,7 +17,7 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
 3. Pick the note: use `--note` from `$ARGUMENTS` or from what the user said (key, BPM, sound). With neither, the script reads a sidecar note next to the audio file (same name, `.md` or `.txt`; the ableton-hook skill writes one). Say which note it used. No note is fine.
 4. Stage: `python3 scripts/post.py stage [FILE] [--note "..."]`. Show the output line that names the staged file and its size.
 5. Stop and ask one short question: **"Send it?"** Do not send on your own.
-6. When the user says yes / send / go: run `python3 scripts/post.py send`. Report the PR URL and the "day page to share" link it prints (`.../day/N/`), which he sends to Jason and Drew. The PR auto-merges after the build check passes and the site updates about a minute later.
+6. When the user says yes / send / go: run `python3 scripts/post.py send`. Report the PR URL and the day page link it prints (`.../day/N/`), which he sends to Jason and Drew. The PR auto-merges after the build check passes and the site updates about a minute later. For a post for a later day the script says "share it on <date>": tell him to send the link that day, not before (an early share gets an empty preview).
 7. If the user says no or wants a different file: run `python3 scripts/post.py undo`, then go back to step 2.
 
 ## Rules
@@ -25,5 +25,5 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
 - One staged post at a time. If `stage` says a post is already staged, show `status` and ask whether to send or undo it.
 - Never commit on `main`. The script always works on a `post/day-NNN-bobby` branch.
 - If the day number looks wrong (he is posting yesterday's hook after midnight), pass `--day N` explicitly. Ask first.
-- A second hook on the same day goes to the next open day with `--day N`. Say so before you stage it. Sending it right away is fine: the site holds it until that day, and `stage` prints the date it appears.
+- A second hook on the same day goes to the next open day with `--day N` (`status` prints N; `stage` without `--day` stops and names it when today is taken). Say so before you stage it. Sending it right away is fine: the site holds it until that day, and `stage` prints the date it appears. The repo is public, so the file and the PR title are on GitHub at once; if he wants a surprise, stage now and send on the day.
 - Keep replies to one or two lines. This runs during music sessions.

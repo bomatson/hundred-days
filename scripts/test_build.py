@@ -77,21 +77,27 @@ class BuildTests(unittest.TestCase):
         self.assertIn("Day 3 of 100. Nothing posted yet.", quiet)
 
     def test_build_holds_posts_for_days_after_today(self):
+        (self.tmp / "audio" / "day-002-jason.md").write_text("secret riff\n")
         # day 1: the day-2 post is in the repo but not on the site yet
         data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 20))
         self.assertEqual([(p["day"], p["who"]) for p in data["posts"]], [(1, "bobby"), (1, "jason")])
         out = self.tmp / "_site"
         shipped = json.loads((out / "posts.json").read_text())["posts"]
         self.assertEqual([(p["day"], p["who"]) for p in shipped], [(1, "bobby"), (1, "jason")])
-        self.assertTrue((out / "audio" / "day-001-jason.m4a").exists())
-        self.assertFalse((out / "audio" / "day-002-jason.m4a").exists(), "a held post's audio must not ship")
+        self.assertEqual(sorted(p.name for p in (out / "audio").iterdir()), ["day-001-bobby.mp3", "day-001-jason.m4a"],
+                         "only released posts ship: no notes, no held posts, no files the scan skipped")
         self.assertIn("Day 2 of 100. Nothing posted yet.", (out / "day" / "2" / "index.html").read_text())
         self.assertIn("Jason posted a bass line.", (out / "day" / "1" / "index.html").read_text())
+        for f in out.rglob("*"):
+            if f.is_file() and f.suffix in {".html", ".json", ".js", ".css", ".svg", ".txt", ".md"}:
+                text = f.read_text(errors="ignore")
+                self.assertNotIn("secret riff", text, f"a held note leaked into {f}")
+                self.assertNotIn("day-002-jason", text, f"a held file name leaked into {f}")
         # day 2: it is out
         data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 21))
         self.assertIn((2, "jason"), [(p["day"], p["who"]) for p in data["posts"]])
         self.assertTrue((out / "audio" / "day-002-jason.m4a").exists())
-        self.assertIn("Jason posted a bass line.", (out / "day" / "2" / "index.html").read_text())
+        self.assertIn("Jason: secret riff", (out / "day" / "2" / "index.html").read_text())
         # before the start: everything is held
         data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 1))
         self.assertEqual(data["posts"], [])

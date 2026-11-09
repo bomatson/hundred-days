@@ -60,7 +60,18 @@ class PostTests(unittest.TestCase):
                      "day-023-bobby.mp3", "random.mp3", ".gitkeep"]:
             (self.tmp / name).write_bytes(b"\x00")
         self.assertEqual(post.held_posts(self.tmp, 21), [(22, "bobby"), (23, "bobby"), (23, "jason")])
+        self.assertEqual(post.held_posts(self.tmp, 21, {"bobby"}), [(22, "bobby"), (23, "bobby")])
         self.assertEqual(post.held_posts(self.tmp, 23), [])
+
+    def test_next_open_day_skips_taken_days(self):
+        for name in ["day-021-bobby.mp3", "day-022-bobby.mp3", "day-023-bobby.mp3", "day-023-jason.m4a"]:
+            (self.tmp / name).write_bytes(b"\x00")
+        self.assertEqual(post.next_open_day(self.tmp, "bobby", 21, 100), 24)
+        self.assertEqual(post.next_open_day(self.tmp, "bobby", 20, 100), 20)
+        self.assertEqual(post.next_open_day(self.tmp, "jason", 21, 100), 21)
+        self.assertEqual(post.next_open_day(self.tmp, "jason", 23, 100), 24)
+        self.assertIsNone(post.next_open_day(self.tmp, "bobby", 23, 23))
+        self.assertEqual(post.next_open_day(self.tmp, "drew", -3, 100), 1)
 
     def test_pick_newest_skips_notes_and_old_files(self):
         old = self.tmp / "old.wav"

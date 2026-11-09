@@ -36,13 +36,16 @@
     return { total: posted.size, current, longest, cells, postedToday: posted.has(cur) };
   }
 
-  // Only the posts for days up to todayDay. A post for a later day (posted early) stays
-  // out of sight until that day comes.
-  function upToDay(posts, todayDay) {
-    return posts.filter((p) => p.day <= todayDay);
+  // UTC-midnight ms of today's date in an IANA time zone: the challenge's own calendar
+  // (challenge.json "timezone"), which decides when the build releases a post.
+  function todayIn(timeZone, now) {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "numeric", day: "numeric" })
+      .formatToParts(now || new Date());
+    const num = (type) => Number(parts.find((p) => p.type === type).value);
+    return Date.UTC(num("year"), num("month") - 1, num("day"));
   }
 
-  const api = { parseDate, localToday, dayNumber, stats, upToDay };
+  const api = { parseDate, localToday, todayIn, dayNumber, stats };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Streaks = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

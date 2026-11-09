@@ -51,10 +51,10 @@ test("stats: before start and after end are clamped", () => {
   assert.equal(s1.longest, 100);
 });
 
-test("upToDay: posts for days after today stay out of sight", () => {
-  const posts = [{ day: 21, who: "bobby" }, { day: 22, who: "bobby" }, { day: 23, who: "jason" }];
-  assert.deepEqual(S.upToDay(posts, 21), [{ day: 21, who: "bobby" }]);
-  assert.deepEqual(S.upToDay(posts, 22).map((p) => p.day), [21, 22]);
-  assert.equal(S.upToDay(posts, 0).length, 0);
-  assert.equal(S.upToDay(posts, 100).length, 3);
+test("todayIn: the date on the challenge's calendar, not the viewer's", () => {
+  const ny = "America/New_York";
+  assert.equal(S.todayIn(ny, new Date("2026-11-10T04:59:00Z")), S.parseDate("2026-11-09"));
+  assert.equal(S.todayIn(ny, new Date("2026-11-10T05:01:00Z")), S.parseDate("2026-11-10"));
+  assert.equal(S.todayIn("UTC", new Date("2026-11-10T04:59:00Z")), S.parseDate("2026-11-10"));
+  assert.equal(S.dayNumber("2026-10-20", S.todayIn(ny, new Date("2026-11-10T05:01:00Z"))), 22);
 });
