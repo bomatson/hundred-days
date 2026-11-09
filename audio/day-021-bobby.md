@@ -1,0 +1,1 @@
+vacay. 112 bpm, c major. a falsetto choir sings the line over four on the floor and a slap bass. the harmony stack joins on the second pass, the voice steps out for four bars, then the whole band comes in.
