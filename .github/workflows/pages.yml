@@ -60,3 +60,5 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1200000   # ms. Pages took ~10 min to sync on 2026-11-09 and the default 600000 timed out.
