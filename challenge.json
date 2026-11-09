@@ -2,6 +2,7 @@
   "title": "Hundred Days",
   "site_url": "https://bomatson.github.io/hundred-days/",
   "start_date": "2026-10-20",
+  "timezone": "America/New_York",
   "days": 100,
   "participants": [
     {

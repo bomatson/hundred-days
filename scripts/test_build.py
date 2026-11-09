@@ -1,4 +1,6 @@
+import contextlib
 import datetime as dt
+import io
 import json
 import os
 import shutil
@@ -13,6 +15,7 @@ import build  # noqa: E402
 import post  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
+LAST = dt.date(2027, 1, 27)   # day 100: nothing is held back
 
 
 class BuildTests(unittest.TestCase):
@@ -30,7 +33,7 @@ class BuildTests(unittest.TestCase):
         shutil.rmtree(self.tmp)
 
     def test_build_scans_named_files_only(self):
-        data = build.build(self.tmp, self.tmp / "_site")
+        data = build.build(self.tmp, self.tmp / "_site", today=LAST)
         posts = data["posts"]
         self.assertEqual([(p["day"], p["who"]) for p in posts],
                          [(1, "bobby"), (1, "jason"), (2, "jason")])
@@ -45,7 +48,7 @@ class BuildTests(unittest.TestCase):
         self.assertIsNone(posts[0]["peaks"], "garbage bytes must not produce a waveform")
 
     def test_build_writes_one_page_per_day(self):
-        build.build(self.tmp, self.tmp / "_site")
+        build.build(self.tmp, self.tmp / "_site", today=LAST)
         out = self.tmp / "_site"
         self.assertFalse((out / "day.html").exists(), "the raw template must not ship")
         self.assertTrue((out / "day" / "1" / "index.html").exists())
@@ -73,6 +76,42 @@ class BuildTests(unittest.TestCase):
         quiet = (out / "day" / "3" / "index.html").read_text()   # day 3 only had a skipped file
         self.assertIn("Day 3 of 100. Nothing posted yet.", quiet)
 
+    def test_build_holds_posts_for_days_after_today(self):
+        # day 1: the day-2 post is in the repo but not on the site yet
+        data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 20))
+        self.assertEqual([(p["day"], p["who"]) for p in data["posts"]], [(1, "bobby"), (1, "jason")])
+        out = self.tmp / "_site"
+        shipped = json.loads((out / "posts.json").read_text())["posts"]
+        self.assertEqual([(p["day"], p["who"]) for p in shipped], [(1, "bobby"), (1, "jason")])
+        self.assertTrue((out / "audio" / "day-001-jason.m4a").exists())
+        self.assertFalse((out / "audio" / "day-002-jason.m4a").exists(), "a held post's audio must not ship")
+        self.assertIn("Day 2 of 100. Nothing posted yet.", (out / "day" / "2" / "index.html").read_text())
+        self.assertIn("Jason posted a bass line.", (out / "day" / "1" / "index.html").read_text())
+        # day 2: it is out
+        data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 21))
+        self.assertIn((2, "jason"), [(p["day"], p["who"]) for p in data["posts"]])
+        self.assertTrue((out / "audio" / "day-002-jason.m4a").exists())
+        self.assertIn("Jason posted a bass line.", (out / "day" / "2" / "index.html").read_text())
+        # before the start: everything is held
+        data = build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 1))
+        self.assertEqual(data["posts"], [])
+
+    def test_build_reports_held_posts(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            build.build(self.tmp, self.tmp / "_site", today=dt.date(2026, 10, 20))
+        self.assertIn("built 2 posts", buf.getvalue())
+        self.assertIn("held 1 for later (today is day 1): day 2 jason (Wed Oct 21)", buf.getvalue())
+
+    def test_today_in_uses_the_challenge_timezone(self):
+        cfg = {"timezone": "America/New_York"}
+        utc = dt.timezone.utc
+        self.assertEqual(build.today_in(cfg, dt.datetime(2026, 11, 10, 4, 59, tzinfo=utc)), dt.date(2026, 11, 9))
+        self.assertEqual(build.today_in(cfg, dt.datetime(2026, 11, 10, 5, 1, tzinfo=utc)), dt.date(2026, 11, 10))
+        self.assertEqual(build.today_in({}, dt.datetime(2026, 11, 10, 4, 59, tzinfo=utc)), dt.date(2026, 11, 10))
+        self.assertEqual(build.day_number({"start_date": "2026-10-20"}, dt.date(2026, 11, 10)), 22)
+        self.assertEqual(build.day_date({"start_date": "2026-10-20"}, 22), dt.date(2026, 11, 10))
+
     def test_day_description_escapes_and_truncates(self):
         cfg = json.loads((ROOT / "challenge.json").read_text())
         posts = [{"who": "bobby", "note": 'A "quoted" <note> & more'}, {"who": "drew", "note": ""}]
@@ -93,7 +132,7 @@ class BuildTests(unittest.TestCase):
         tone = self.tmp / "audio" / "day-009-bobby.mp3"
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
                         "-codec:a", "libmp3lame", "-b:a", "64k", str(tone)], check=True)
-        data = build.build(self.tmp, self.tmp / "_site")
+        data = build.build(self.tmp, self.tmp / "_site", today=LAST)
         post = next(p for p in data["posts"] if p["day"] == 9)
         self.assertEqual(len(post["peaks"]), build.PEAKS)
         self.assertAlmostEqual(post["duration"], 1.5, delta=0.15)
@@ -105,7 +144,7 @@ class BuildTests(unittest.TestCase):
         real_which = shutil.which
         shutil.which = lambda name: None
         try:
-            again = build.build(self.tmp, self.tmp / "_site")
+            again = build.build(self.tmp, self.tmp / "_site", today=LAST)
         finally:
             shutil.which = real_which
         self.assertEqual(next(p for p in again["posts"] if p["day"] == 9)["peaks"], post["peaks"])

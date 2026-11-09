@@ -6,7 +6,12 @@ day-NNN-<participant>.md notes, and writes _site/ with index.html, the
 streak script, posts.json, a copy of audio/, and one page per day at
 day/N/index.html (rendered from site/day.html) so a single day can be shared.
 
-Usage: python3 scripts/build.py [--root REPO_ROOT] [--out _site]
+A post for a day that has not come yet (posted early) is held: it stays out of
+posts.json, out of _site/audio/, and out of its day page until that day arrives
+in the challenge's timezone (challenge.json "timezone"). The deploy workflow
+rebuilds just after midnight there, so a held post appears on its day.
+
+Usage: python3 scripts/build.py [--root REPO_ROOT] [--out _site] [--today YYYY-MM-DD]
 """
 import argparse
 import datetime as dt
@@ -19,6 +24,7 @@ import struct
 import subprocess
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 PEAKS = 160          # bars per waveform
 PEAK_RATE = 8000     # Hz, mono, plenty for a silhouette
@@ -42,6 +48,21 @@ def git_date(root: Path, rel: str) -> str | None:
         return out or None
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
+
+
+def today_in(cfg: dict, now: dt.datetime | None = None) -> dt.date:
+    """Today's date in the challenge's timezone (challenge.json "timezone", else UTC)."""
+    zone = ZoneInfo(cfg.get("timezone") or "UTC")
+    return (now or dt.datetime.now(dt.timezone.utc)).astimezone(zone).date()
+
+
+def day_number(cfg: dict, date: dt.date) -> int:
+    """1-based day number of a date. Day 1 is start_date; days before it are 0 and below."""
+    return (date - dt.date.fromisoformat(cfg["start_date"])).days + 1
+
+
+def day_date(cfg: dict, day: int) -> dt.date:
+    return dt.date.fromisoformat(cfg["start_date"]) + dt.timedelta(days=day - 1)
 
 
 def peaks_for(path: Path, cache: Path) -> dict | None:
@@ -126,7 +147,7 @@ def day_description(cfg: dict, posts: list[dict], day: int) -> str:
 def render_day(template: str, cfg: dict, posts: list[dict], day: int) -> str:
     """Fill site/day.html for one day. The page loads posts.json and renders the players itself."""
     site_url = (cfg.get("site_url") or SITE_URL).rstrip("/") + "/"
-    date = dt.date.fromisoformat(cfg["start_date"]) + dt.timedelta(days=day - 1)
+    date = day_date(cfg, day)
     fills = {
         "DAY": str(day),
         "TOTAL": str(cfg["days"]),
@@ -143,14 +164,20 @@ def render_day(template: str, cfg: dict, posts: list[dict], day: int) -> str:
     return out
 
 
-def build(root: Path, out: Path) -> dict:
+def build(root: Path, out: Path, today: dt.date | None = None) -> dict:
+    """Write the site to out/. Posts for days after today (in the challenge's timezone) are held back."""
     cfg = json.loads((root / "challenge.json").read_text())
-    posts, warnings = scan(root)
+    today_day = day_number(cfg, today or today_in(cfg))
+    found, warnings = scan(root)
+    posts = [p for p in found if p["day"] <= today_day]
+    held = [p for p in found if p["day"] > today_day]
     data = {**cfg, "posts": posts}
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(root / "site", out, ignore=shutil.ignore_patterns(DAY_TEMPLATE))
-    shutil.copytree(root / "audio", out / "audio", ignore=shutil.ignore_patterns(".gitkeep", "*.md"))
+    held_files = {Path(p["file"]).name for p in held}
+    shutil.copytree(root / "audio", out / "audio",
+                    ignore=lambda _dir, names: [n for n in names if n == ".gitkeep" or n.endswith(".md") or n in held_files])
     (out / "posts.json").write_text(json.dumps(data, indent=2))
     (out / ".nojekyll").write_text("")
     template = (root / "site" / DAY_TEMPLATE).read_text()
@@ -164,6 +191,12 @@ def build(root: Path, out: Path) -> dict:
     for w in warnings:
         print(f"warning: {w}", file=sys.stderr)
     print(f"built {len(posts)} posts and {cfg['days']} day pages -> {out}")
+    if held:
+        items = []
+        for p in held:
+            date = day_date(cfg, p["day"])
+            items.append(f"day {p['day']} {p['who']} ({date:%a %b} {date.day})")
+        print(f"held {len(held)} for later (today is day {today_day}): " + ", ".join(items))
     return data
 
 
@@ -171,6 +204,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=Path(__file__).resolve().parent.parent)
     ap.add_argument("--out", default="_site")
+    ap.add_argument("--today", type=dt.date.fromisoformat,
+                    help="build as if it were this date (YYYY-MM-DD), e.g. to preview a held post")
     a = ap.parse_args()
     root = Path(a.root)
-    build(root, root / a.out)
+    build(root, root / a.out, today=a.today)

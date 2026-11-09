@@ -8,9 +8,13 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmt = (t) => isFinite(t) ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}` : "–:––";
 
+  // posts.json, minus any post for a day that has not come yet on the viewer's calendar
+  // (posted early, or the viewer is behind the build's timezone). It shows on its day.
   async function load() {
     const res = await fetch(ROOT + "posts.json", { cache: "no-store" });
-    return res.json();
+    const data = await res.json();
+    data.posts = Streaks.upToDay(data.posts, Streaks.dayNumber(data.start_date, Streaks.localToday()));
+    return data;
   }
 
   // participant id -> CSS color

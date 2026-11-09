@@ -9,7 +9,7 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
 
 ## Steps
 
-1. Run `python3 scripts/post.py status`. Report the day number and whether something is already staged.
+1. Run `python3 scripts/post.py status`. Report the day number, whether something is already staged, and any posts held for later days.
 2. Pick the audio file:
    - If `$ARGUMENTS` names a file, use it.
    - Else if the user named a file in chat, use it.
@@ -25,4 +25,5 @@ Repo: this one (`hundred-days`). Tool: `scripts/post.py`. Arguments: `$ARGUMENTS
 - One staged post at a time. If `stage` says a post is already staged, show `status` and ask whether to send or undo it.
 - Never commit on `main`. The script always works on a `post/day-NNN-bobby` branch.
 - If the day number looks wrong (he is posting yesterday's hook after midnight), pass `--day N` explicitly. Ask first.
+- A second hook on the same day goes to the next open day with `--day N`. Say so before you stage it. Sending it right away is fine: the site holds it until that day, and `stage` prints the date it appears.
 - Keep replies to one or two lines. This runs during music sessions.

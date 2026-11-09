@@ -17,3 +17,16 @@ test("renderPost: the file path is escaped in the link", () => {
   const html = HD.renderPost({ name: "A", makes: "x" }, { file: 'audio/a"b.mp3' }, 1, "#000");
   assert.ok(html.includes('href="../../audio/a&quot;b.mp3"'));
 });
+
+test("load: a post for a day that has not come yet on the viewer's calendar is dropped", async () => {
+  const S = require("./streaks.js");
+  globalThis.Streaks = { ...S, localToday: () => S.parseDate("2026-11-09") };   // day 21
+  const posts = [{ day: 21, who: "bobby" }, { day: 22, who: "bobby" }, { day: 23, who: "bobby" }];
+  globalThis.fetch = async (url) => {
+    assert.equal(url, "../../posts.json");
+    return { json: async () => ({ start_date: "2026-10-20", days: 100, posts }) };
+  };
+  const data = await HD.load();
+  assert.deepEqual(data.posts.map((p) => p.day), [21]);
+  assert.equal(data.days, 100);
+});

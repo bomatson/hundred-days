@@ -36,7 +36,13 @@
     return { total: posted.size, current, longest, cells, postedToday: posted.has(cur) };
   }
 
-  const api = { parseDate, localToday, dayNumber, stats };
+  // Only the posts for days up to todayDay. A post for a later day (posted early) stays
+  // out of sight until that day comes.
+  function upToDay(posts, todayDay) {
+    return posts.filter((p) => p.day <= todayDay);
+  }
+
+  const api = { parseDate, localToday, dayNumber, stats, upToDay };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Streaks = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

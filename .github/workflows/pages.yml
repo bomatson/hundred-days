@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Release the day's held posts (see scripts/build.py). Cron is UTC; New York is UTC-5
+    # for the rest of the challenge, so these run at 00:07 and 01:07 there. The second
+    # run covers a skipped or late first one.
+    - cron: "7 5 * * *"
+    - cron: "7 6 * * *"
 
 permissions:
   contents: read

@@ -4,6 +4,7 @@
   python3 scripts/post.py stage [AUDIO_FILE] [--note TEXT] [--day N] [--who ID]
       Convert the file to 192 kbps MP3 if needed, name it day-NNN-<who>.mp3, write the
       note, and commit it on a branch post/day-NNN-<who>. Nothing is pushed.
+      --day N may be a later day: the site holds the post until that day comes.
       Without AUDIO_FILE it picks the newest audio file on ~/Desktop from the
       last 24 hours. Without --note it uses a sidecar note next to the audio
       file, if there is one: the same name with .md or .txt (hook.wav -> hook.md).
@@ -11,7 +12,7 @@
       Push the staged branch, open a PR, and turn on auto-merge. The site
       rebuilds when the PR merges.
   python3 scripts/post.py status
-      Show what is staged and what day it is.
+      Show what is staged, what day it is, and which posts are held for later days.
   python3 scripts/post.py undo
       Drop the staged branch and go back to main.
 """
@@ -48,6 +49,28 @@ def compute_day(start_date: str, today: dt.date) -> int:
 
 def target_name(day: int, who: str, ext: str) -> str:
     return f"day-{day:03d}-{who}{ext.lower()}"
+
+
+def day_date(start_date: str, day: int) -> dt.date:
+    return dt.date.fromisoformat(start_date) + dt.timedelta(days=day - 1)
+
+
+def held_note(start_date: str, day: int, today: dt.date) -> str:
+    """One line when a post is for a day that has not come yet, else ""."""
+    if day <= compute_day(start_date, today):
+        return ""
+    d = day_date(start_date, day)
+    return f"day {day} is {d:%A, %b} {d.day}: the site holds this post until then."
+
+
+def held_posts(audio: Path, today_day: int) -> list[tuple[int, str]]:
+    """(day, who) for every audio file in audio/ posted for a day after today_day, in day order."""
+    found = set()
+    for f in audio.iterdir():
+        m = re.match(r"^day-(\d{3})-([a-z0-9]+)\.[a-z0-9]+$", f.name, re.I)
+        if m and f.suffix.lower() != ".md" and int(m.group(1)) > today_day:
+            found.add((int(m.group(1)), m.group(2).lower()))
+    return sorted(found)
 
 
 def pick_newest(folder: Path, hours: float = 24, now: float | None = None) -> Path | None:
@@ -127,6 +150,9 @@ def cmd_stage(a):
     print(f"staged day {day} for {a.who}: audio/{dest.name} ({size:.1f} MB) on branch {branch}")
     if note:
         print(f"note: {note}")
+    ahead = held_note(cfg["start_date"], day, dt.date.today())
+    if ahead:
+        print(ahead)
     print("next: python3 scripts/post.py send")
 
 
@@ -142,9 +168,12 @@ def cmd_send(a):
              "--body", "Daily post. Auto-merges when the build check passes.")
     sh("gh", "pr", "merge", branch, "--auto", "--squash", "--delete-branch")
     sh("git", "checkout", "-q", "main")
+    cfg = config()
     print(f"sent: {url}")
-    print("the site updates about a minute after the PR merges.")
-    link = day_url(config(), branch)
+    m = re.match(r"post/day-(\d{3})-", branch)
+    ahead = held_note(cfg["start_date"], int(m.group(1)), dt.date.today()) if m else ""
+    print(ahead or "the site updates about a minute after the PR merges.")
+    link = day_url(cfg, branch)
     if link:
         print(f"day page to share: {link}")
 
@@ -161,6 +190,13 @@ def cmd_status(a):
     cfg = config()
     day = compute_day(cfg["start_date"], dt.date.today())
     print(f"today is day {day} of {cfg['days']} (start {cfg['start_date']})")
+    held = held_posts(ROOT / "audio", day)
+    if held:
+        items = []
+        for d, who in held:
+            date = day_date(cfg["start_date"], d)
+            items.append(f"day {d} {who} ({date:%a %b} {date.day})")
+        print("held for later: " + ", ".join(items))
     b = staged_branch()
     if b:
         files = sh("git", "diff", "--name-only", "main...HEAD")
