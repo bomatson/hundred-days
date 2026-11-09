@@ -5,14 +5,23 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Release the day's held posts (see scripts/build.py): just after midnight in New York,
+    # and once more an hour later in case GitHub skipped or delayed the first run.
+    - cron: "7 0 * * *"
+      timezone: "America/New_York"
+    - cron: "7 1 * * *"
+      timezone: "America/New_York"
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# One deploy at a time. PR checks get their own group, so a waiting scheduled run is not
+# bumped by a PR check (GitHub keeps only one pending run per group).
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && github.ref || 'pages' }}
   cancel-in-progress: false
 
 jobs:
@@ -51,3 +60,5 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1200000   # ms. Pages took ~10 min to sync on 2026-11-09 and the default 600000 timed out.

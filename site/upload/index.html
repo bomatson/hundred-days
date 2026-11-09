@@ -63,7 +63,7 @@
 <main>
   <header class="top"><a class="wordmark" href="../">Hundred Days</a><span id="today"></span></header>
   <h1>Post today's take</h1>
-  <p class="lead">Pick the voice memo, check the day, send. The site updates about a minute later.</p>
+  <p class="lead">Pick the voice memo, check the day, send. The site updates about a minute later. A post for a later day shows up on that day.</p>
 
   <div id="off" class="msg bad hidden"><b>Uploads are not switched on yet.</b><span>Ask Bobby. Until then, the README on GitHub has the manual way.</span></div>
 
@@ -115,6 +115,8 @@
   // day picker
   const todayDay = S.dayNumber(data.start_date, S.localToday());
   const cur = Math.min(Math.max(todayDay, 1), data.days);
+  // the site's own calendar (New York) decides when a post shows; a later day is held until then
+  const siteToday = data.timezone ? S.dayNumber(data.start_date, S.todayIn(data.timezone)) : todayDay;
   const dayDate = (d) => new Date(S.parseDate(data.start_date) + (d - 1) * 86400000)
     .toLocaleDateString(undefined, { timeZone: "UTC", weekday: "short", month: "short", day: "numeric" });
   $("today").textContent = todayDay < 1 ? `Starts ${dayDate(1)}` : todayDay > data.days ? "Finished" : `Day ${todayDay} of ${data.days}`;
@@ -193,7 +195,8 @@
     });
     $("bar").classList.add("hidden"); bar.style.width = "0";
     if (res.status === 200 && res.body.ok) {
-      $("done").innerHTML = `<b>Day ${res.body.day} posted as ${res.body.name}.</b><span>It shows on the site in about a minute.</span><a href="../">Open the site</a>`;
+      const when = res.body.day > siteToday ? `The site holds it until ${dayDate(res.body.day)}.` : "It shows on the site in about a minute.";
+      $("done").innerHTML = `<b>Day ${res.body.day} posted as ${res.body.name}.</b><span>${when}</span><a href="../">Open the site</a>`;
       $("done").classList.remove("hidden");
       $("f").reset(); file.dispatchEvent(new Event("change"));
       try { pass.value = localStorage.getItem("hd-pass") || ""; } catch {}
