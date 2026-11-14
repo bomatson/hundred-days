@@ -202,7 +202,7 @@
         $("done").innerHTML = `<b>Day ${day} saved as ${name}.</b><span>The site holds it until ${dayDate(day)}.</span><a href="../">Open the site</a>`;
       } else {
         $("done").innerHTML = `<b>Day ${day} saved as ${name}.</b><span id="pub">Publishing. This usually takes a few minutes. Do not upload it again.</span>${buildLink()}`;
-        watchLive(day, by, name, bytes);
+        watchLive(day, by, name, bytes, ++uploads);
       }
       $("done").classList.remove("hidden");
       $("f").reset(); file.dispatchEvent(new Event("change"));
@@ -218,17 +218,21 @@
   }
   $("f").addEventListener("submit", (e) => { e.preventDefault(); if (!$("go").disabled) send(false); });
 
-  // publication watch: poll posts.json (cache-busted; the Pages CDN keeps it for 10 min) until the
-  // post shows up with the uploaded size, for up to 25 minutes
+  // publication watch: poll posts.json until the post shows up with the uploaded size. The Pages
+  // CDN keeps posts.json for up to 10 minutes (a query string does not get past it), so "live" can
+  // lag the deploy by that much; it never comes early. Gives up after 45 minutes, which covers a
+  // slow build, a slow Pages sync, and one automatic rerun.
   const buildLink = () => data.repo_url ? `<a href="${data.repo_url}/actions/workflows/pages.yml" target="_blank" rel="noopener">See the build</a>` : "";
-  async function watchLive(day, by, name, bytes) {
-    const started = Date.now(), every = 15000, giveUp = 25 * 60000;
+  let uploads = 0;   // each upload gets a number; an older watch stops when a newer upload starts
+  async function watchLive(day, by, name, bytes, mine) {
+    const started = Date.now(), every = 15000, giveUp = 45 * 60000;
     const tick = async () => {
       const pub = $("pub");
-      if (!pub) return;   // a new upload replaced the message
+      if (!pub || mine !== uploads) return;   // a newer upload owns the message now
       try {
-        const r = await fetch(`../posts.json?t=${Date.now()}`, { cache: "no-store" });
+        const r = await fetch("../posts.json", { cache: "no-store" });
         const live = r.ok && ((await r.json()).posts || []).some((p) => p.day === day && p.who === by && p.bytes === bytes);
+        if (mine !== uploads) return;   // a newer upload started during the fetch
         if (live) {
           $("done").innerHTML = `<b>Day ${day} is live as ${name}.</b><a href="../day/${day}/">Open day ${day}</a>`;
           return;
