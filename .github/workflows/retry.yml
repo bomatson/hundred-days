@@ -1,0 +1,42 @@
+name: Retry a failed deploy
+
+# A push or scheduled "Build and deploy" run that fails gets one more try, twice at most.
+# Pages deploys have timed out (2026-11-09) and runners have lost DNS (2026-11-11); a plain
+# rerun fixed both by hand. PR checks are left alone.
+
+on:
+  workflow_run:
+    workflows: ["Build and deploy"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read   # to read main's head before a rerun
+
+jobs:
+  retry:
+    if: >-
+      github.event.workflow_run.conclusion == 'failure'
+      && github.event.workflow_run.event != 'pull_request'
+      && github.event.workflow_run.run_attempt < 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Rerun the failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          echo "run $RUN_ID ($RUN_SHA) failed on attempt $ATTEMPT"
+          sleep 120
+          # A rerun keeps the run's own commit and artifact. If main moved on, a newer run already
+          # deploys (or deployed) that commit, and a rerun here would put an older site back.
+          head=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)
+          if [ "$head" != "$RUN_SHA" ]; then
+            echo "main is now $head; the failed run is stale, nothing to rerun"
+            exit 0
+          fi
+          # --failed reruns only the failed jobs; a run that failed with no jobs needs a full rerun
+          gh run rerun "$RUN_ID" --failed --repo "$GITHUB_REPOSITORY" || gh run rerun "$RUN_ID" --repo "$GITHUB_REPOSITORY"

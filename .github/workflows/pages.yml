@@ -27,6 +27,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20   # the ffmpeg apt install hung for an hour on 2026-11-11 and held the post back all day
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,8 +41,34 @@ jobs:
           path: .peaks-cache
           key: peaks-${{ hashFiles('audio/**') }}
           restore-keys: peaks-
+      # The runner image (ubuntu 26.04) has no ffmpeg. On 2026-11-11 apt could not resolve
+      # security.ubuntu.com and hung for an hour, twice, so the day's post stayed unpublished.
+      # Order now: cached static binary, GitHub-hosted static build, apt last, each with a time limit.
+      # A build with no ffmpeg still publishes; the new post then has no waveform until a later build.
+      - name: ffmpeg cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ffmpeg
+          key: ffmpeg-static-n8.1-linux64
       - name: ffmpeg
-        run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+        continue-on-error: true
+        timeout-minutes: 8
+        run: |
+          mkdir -p ~/.ffmpeg
+          if [ ! -x ~/.ffmpeg/ffmpeg ]; then
+            url=https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz
+            curl -fsSL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 240 -o /tmp/ffmpeg.tar.xz "$url" \
+              && tar -xJf /tmp/ffmpeg.tar.xz --strip-components=2 -C ~/.ffmpeg --wildcards '*/bin/ffmpeg' \
+              || echo "::warning::static ffmpeg download failed, trying apt"
+          fi
+          if [ -x ~/.ffmpeg/ffmpeg ]; then
+            echo "$HOME/.ffmpeg" >> "$GITHUB_PATH"
+            ~/.ffmpeg/ffmpeg -version | head -1
+            exit 0
+          fi
+          which ffmpeg && exit 0
+          APT="sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
+          $APT update && $APT install -y --no-install-recommends ffmpeg
       - name: Run tests
         run: python3 -m unittest discover -s scripts -p "test_*.py" -v && node --test site/streaks.test.js site/player.test.js worker/test.mjs
       - name: Build site
@@ -54,6 +81,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # covers the 20 min deploy-pages timeout below plus setup
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
