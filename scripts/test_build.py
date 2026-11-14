@@ -134,6 +134,7 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(build.render_day("{{URL}}", cfg, [], 7), "https://bomatson.github.io/hundred-days/day/7/")
 
     @unittest.skipUnless(shutil.which("ffmpeg"), "ffmpeg not installed")
+    @unittest.skipUnless(shutil.which("ffmpeg"), "needs ffmpeg; the deploy build publishes without it")
     def test_peaks_from_real_audio_and_cache(self):
         tone = self.tmp / "audio" / "day-009-bobby.mp3"
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=1.5",
