@@ -19,6 +19,12 @@ Start date: **2026-10-20** (day 1). Day 100 is 2027-01-27.
 4. Listen to the other person's post and leave a comment on it (GitHub Discussions, text, whatever).
 5. The site shows a 100-cell grid per person: posted, missed, upcoming. Keep the grid full.
 
+## Listen to everything (Shuffle all)
+
+On the home page, tap **Shuffle all**. The site picks a random post and plays it, then the next one, with no end: every post plays once in a random order, then a new random order starts. A bar at the bottom of the page shows the track and has Previous, Play/Pause, Next, and Stop shuffle. Tap any post while the shuffle is on and it plays next, then the shuffle goes on.
+
+It keeps playing with the phone locked, and the lock screen, the car display, and the steering-wheel or headset buttons can skip tracks. Keep the page open: the shuffle stops if you leave the home page or close the tab. Each track loads from the network when it starts.
+
 ## How to post from your phone (Jason and Drew)
 
 Open **https://bomatson.github.io/hundred-days/upload/** on your phone. Add it to your home screen if you like.

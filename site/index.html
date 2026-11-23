@@ -36,6 +36,12 @@
 
   <section class="seq" aria-label="Progress">
     <h1 id="headline">Hundred Days</h1>
+    <div class="listen">
+      <button class="btn big" id="shuffle" type="button" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4.5h2.4a3.5 3.5 0 0 1 2.9 1.5l2.4 4a3.5 3.5 0 0 0 2.9 1.5h2.4M1.5 11.5h2.4a3.5 3.5 0 0 0 2.5-1M9.6 5.5a3.5 3.5 0 0 1 2.5-1h2.4M12.5 2.5l2 2-2 2M12.5 9.5l2 2-2 2"/></svg>
+        Shuffle all
+      </button>
+    </div>
     <div id="lanes"></div>
   </section>
 
@@ -113,6 +119,13 @@
     byDay.get(post.day).push(post);
   }
   document.getElementById("feed-title").textContent = byDay.size ? `${data.posts.length} posts` : "Posts";
+
+  // Shuffle all: every post in random order, one after the other, with no end
+  const shuffleBtn = document.getElementById("shuffle");
+  if (data.posts.length) {
+    shuffleBtn.hidden = false;
+    shuffleBtn.addEventListener("click", () => HD.shuffle());
+  }
   if (!byDay.size) {
     feed.innerHTML = todayDay < 1
       ? `<div class="empty-state"><b>Nothing here yet.</b> The first posts land on ${dayDate(1, { weekday: "long", month: "long", day: "numeric" })}.</div>`
